@@ -1,0 +1,27 @@
+{
+  "name": "forked",
+  "version": "0.1.0-dev",
+  "description": "a social platform for collaborative cooking",
+  "main": "index.js",
+  "scripts": {
+    "test": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ryan0x41/forked.git"
+  },
+  "keywords": [
+    "cooking",
+    "recipe",
+    "food",
+    "share",
+    "fork",
+    "collaborate"
+  ],
+  "author": "Josh, Iga, Sean and Ryan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ryan0x41/forked/issues"
+  },
+  "homepage": "https://github.com/ryan0x41/forked#readme"
+}
