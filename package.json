@@ -23,5 +23,15 @@
   "bugs": {
     "url": "https://github.com/ryan0x41/forked/issues"
   },
-  "homepage": "https://github.com/ryan0x41/forked#readme"
+  "homepage": "https://github.com/ryan0x41/forked#readme",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.4.7",
+    "ejs-mate": "^4.0.0",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.12.0",
+    "uuid": "^11.0.5"
+  }
 }

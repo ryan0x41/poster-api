@@ -1,4 +1,4 @@
-const fs = require('fs').promises;
+const { connectDB } = require('./db')
 // for hashing passwords
 const bcrypt = require('bcrypt');
 // for creating a session when logged in
@@ -113,76 +113,66 @@ function validateRegistration(username, email, password) {
 
 // creates a user object, appends to existing or newly created .json file
 async function createUser(username, email, password) {
-    try {
-        validateRegistration(username, email, password);
-    } catch (error) {
-        console.error(error);
-        throw new Error('error validating user registration input!');
-    }
+    const db = await connectDB();
+    const usersCollection = db.collection('users');
+
+    // trust no one
+    validateRegistration(username, email, password);
 
     // hash the password, salt the hash a number of times
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
-    // create a new user object with name, email and passwordHash
-    const user = new User(username, email, passwordHash);
+    // check if the user already exists in the db
+    const existingUser = await usersCollection.findOne({
+        // logical OR operation, if username OR email are present
+        $or: [{ username }, { email }],
+    });
 
-    // grab users from file
-    const users = await loadUsers();
-
-    // check if the user already exists
-    // RESEARCH: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some
-    if(users.some(u => u.username === username || u.email === email)) {
+    // user already exists
+    if (existingUser) {
         throw new Error('username or email already exists!');
     }
 
-    // add the new user into the array
-    users.push(user);
+    // create user document
+    const user = {
+        id: uuidv4(),
+        username,
+        email,
+        passwordHash,
+        account_creation: Date.now(),
+        recipes: [], // reference to recipes
+    };
 
-    // save new users to file
-    await saveUsers(users);
-    console.log(`User ${username} has been created and saved to users.json`);
+    // insert into mongodb users collection
+    await usersCollection.insertOne(user);
+    console.log(`user ${username} created`);
 
     // return the newly created user
     return { id: user.id, username: user.username, email: user.email };
 }
 
-// query can be either id, email or username
+// this is so much cleaner than fs wow
 async function getUser(query) {
-    try {
-        const users = await loadUsers();
+    const db = await connectDB();
+    const usersCollection = db.collection('users');
 
-        // RESEARCH: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find
-        if (query.id) {
-            // if the id is found in users, return user, else return null
-            const user = users.find(u => u.id == query.id);
-            return user || null;
-        } 
-        
-        if (query.username) {
-            const user = users.find(u => u.username === query.username);
-            return user || null;
-        }
-
-        if (query.email) {
-            const user = users.find(u => u.email === query.email);
-            return user || null;
-        }
-    } catch (error) {
-        console.error('error fetching user:', error);
-        throw new Error('failed to retrieve user.');
-    }
+    // query by id, username or email
+    const user = await usersCollection.findOne(query);
+    return user || null;
 }
 
+
 async function loginUser(usernameOrEmail, password) {
-    // find the user in the users file
-    let user = await getUser({ username: usernameOrEmail });
+    const db = await connectDB();
+    const usersCollection = db.collection('users');
+
+    // find the user by email or username
+    const user = await usersCollection.findOne({
+        $or: [{ username: usernameOrEmail }, { email: usernameOrEmail }],
+    });
 
     if(!user) {
-        user = await getUser({ email: usernameOrEmail });
-    }
-
-    if(!user) {
-        throw new Error('user not found');
+        throw new Error('user not found!');
     }
 
     // with the user, we need to compare the hash of the password with the users hashed password
@@ -204,29 +194,26 @@ async function loginUser(usernameOrEmail, password) {
     );
 
     // return the token once generated
-    return { token, user };
+    return { token, user: { id: user.id, username: user.username, email: user.email } };
 }
 
 async function addUserRecipes(userId, recipes) {
-    // load all users because we will need to save the new users file
-    const users = await loadUsers();
+    const db = await connectDB();
+    const usersCollection = db.collection('users');
 
-    // find the userIndex by id in the loaded users
-    const userIndex = users.findIndex(u => u.id == userId);
-    if(userIndex == -1) {
-        throw new Error('user not found');
+    const result = await usersCollection.updateOne(
+        // for user id
+        {id: userId },
+        // push the new recipes
+        { $push: { recipes: { $each: recipes } } }
+    );
+
+    if (result.matchedCount === 0) {
+        throw new Error('user not found!');
     }
 
-    const user = users[userIndex];
-
-    // RESEARCH: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax
-    // if recipes is undefined or null, return []
-    user.recipes = [ ...user.recipes, ...recipes ];
-
-    await saveUsers(users);
-    console.log(`user recipes updated for user id: ${userId}`);
-
-    return { id: user.id, info: user.recipes };
+    console.log(`recipes added to userId: ${userId}`);
+    return { userId, recipes };
 }
 
 // simple but effective
@@ -236,12 +223,12 @@ async function getUserRecipes(userId) {
 }
 
 async function editUser(userId, newUsername, newEmail) {
-    const users = await loadUsers();
+    const db = await connectDB();
+    const usersCollection = db.collection('users');
 
-    // grab user by id
-    const userIndex = users.findIndex(u => u.id === userId);
-    if (userIndex === -1) {
-        throw new Error('user not found');
+    const user = await usersCollection.findOne({ id: userId });
+    if(!user) {
+        throw new Error('user not found!');
     }
 
     // validate
@@ -252,7 +239,8 @@ async function editUser(userId, newUsername, newEmail) {
         }
 
         // check for duplicate
-        if (users.some(u => u.username === newUsername && u.id !== userId)) {
+        const usernameConflict = await usersCollection.findOne({ username: newUsername, id: { $ne: userId } });
+        if (usernameConflict) {
             throw new Error('username already exists!');
         }
     }
@@ -265,55 +253,55 @@ async function editUser(userId, newUsername, newEmail) {
         }
 
         // check for duplicate
-        if (users.some(u => u.email === newEmail && u.id !== userId)) {
-            throw new Error('email already exists!');
+        const emailConflict = await usersCollection.findOne({ email: newEmail, id: { $ne: userId } });
+        if (emailConflict) {
+            throw new Error('Email already exists!');
         }
     }
 
-    // update user details
-    const user = users[userIndex];
-    if (newUsername) user.username = newUsername;
-    if (newEmail) user.email = newEmail;
+    const updateFields = {};
+    if (newUsername) updateFields.username = newUsername;
+    if (newEmail) updateFields.email = newEmail;
 
-    // save to file
-    await saveUsers(users);
+    const result = await usersCollection.updateOne(
+        { id: userId },
+        { $set: updateFields }
+    );
 
-    // create a new token
+    // failure
+    if (result.matchedCount === 0) {
+        throw new Error('failed to update user');
+    }
+
+    // generate new token with updated information
+    const updatedUser = await usersCollection.findOne({ id: userId });
     const token = jwt.sign(
-        { id: user.id, username: user.username, email: user.email },
+        { id: updatedUser.id, username: updatedUser.username, email: updatedUser.email },
         JWT_SECRET,
         { expiresIn: '24h' }
     );
 
-    console.log(`user with id ${userId} updated`);
+    console.log(`user with id ${userId} updated successfully!`);
 
-    // the front end can rely on the token to display the username on the future profile page
-    // TODO: frontend stuff
-    return { user: { id: user.id, username: user.username, email: user.email }, token };
+    return {
+        user: { id: updatedUser.id, username: updatedUser.username, email: updatedUser.email },
+        token
+    };
 }
 
 // delete a user by an id
 async function deleteUser(userId) {
-    const users = await loadUsers();
+    const db = await connectDB();
+    const usersCollection = db.collection('users');
 
-    const userIndex = users.findIndex(u => u.id === userId);
-    if (userIndex === -1) {
-        throw new Error('user not found');
+    // delete user by id
+    const result = await usersCollection.deleteOne({ id: userId });
+    if (result.deletedCount === 0) {
+        throw new Error('user not found!');
     }
 
-    // remove number of elements starting from an index
-    // remove 1 element from users at userIndex
-    // .splice() returns an array, [0] accesses the first and only element of that array
-    const user = users.splice(userIndex, 1)[0];
-
-    try {
-        // null means no transformation, 2 means the level of indentation
-        await fs.writeFile(USERS_FILE, JSON.stringify(users, null, 2), 'utf-8');
-    } catch (error) {
-        throw new Error('failed to update users file');
-    }
-
-    return { id: user.id, username: user.username, email: user.email };
+    console.log(`user with id ${userId} deleted`);
+    return { userId };
 }
 
 module.exports = { createUser, loginUser, addUserRecipes, getUserRecipes, deleteUser, editUser };

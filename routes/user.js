@@ -1,4 +1,5 @@
 const express = require('express');
+const bcrypt = require('bcrypt');
 const router = express.Router();
 
 // the CRUD operations needed from userService
@@ -68,5 +69,42 @@ router.post('/add-recipes', authenticateCookie, async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+router.post('/delete-account', authenticateCookie, async (req, res) => {
+    const { userId, usernameOrEmail, password } = req.body;
+
+    // validate against auth user
+    if (!req.user || req.user.id !== userId) {
+        return res.status(401).json({ error: 'not a chance' });
+    }
+
+    try {
+        // auth user
+        const { user } = await loginUser(usernameOrEmail, password);
+
+        if (!user || user.id !== req.user.id) {
+            return res.status(401).json({ error: 'invalid username, email or password for this account' });
+        }
+
+        // make sure password is correct
+        const passwordValid = await bcrypt.compare(password, user.passwordHash);
+        if (!passwordValid) {
+            return res.status(400).json({ error: 'invalid password' });
+        }
+
+        // delete account
+        const deletedUser = await deleteUser(userId);
+        if (!deletedUser || !deletedUser.username) {
+            throw new Error('failed to delete user');
+        }
+
+        res.status(200).json({ message: `goodbye ${deletedUser.username} ;(` });
+    } catch (error) {
+        console.error(error);
+        res.status(400).json({ error: error.message });
+    }
+});
+
+
 
 module.exports = router;
