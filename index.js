@@ -9,14 +9,14 @@ const app = express()
 const port = 3000
 
 const userRouter = require('./routes/user')
-const recipeRouter = require('./routes/recipe')
+const postRouter = require('./routes/post')
 
 app.use(cookieParser());
 // middleware to parse json
 app.use(express.json());
 
 app.use('/user', userRouter);
-app.use('/recipe', recipeRouter);
+app.use('/post', postRouter);
 
 // ejs
 app.engine('ejs', engine);

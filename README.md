@@ -1,2 +1,2 @@
 # forked
-a social platform for collaborative cooking
+a social platform for ~~music~~
