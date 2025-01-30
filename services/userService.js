@@ -28,7 +28,6 @@ const SALT_ROUNDS = 10;
         - a username
         - an email
         - a password (hashed)
-        - a reference number to one or more recipes
 */
 
 class User {
@@ -38,7 +37,6 @@ class User {
         this.username = username;
         this.email = email;
         this.passwordHash = passwordHash
-        this.recipes = [];
     }
 }
 
@@ -140,7 +138,6 @@ async function createUser(username, email, password) {
         email,
         passwordHash,
         account_creation: Date.now(),
-        recipes: [], // reference to recipes
     };
 
     // insert into mongodb users collection
@@ -195,31 +192,6 @@ async function loginUser(usernameOrEmail, password) {
 
     // return the token once generated
     return { token, user: { id: user.id, username: user.username, email: user.email } };
-}
-
-async function addUserRecipes(userId, recipes) {
-    const db = await connectDB();
-    const usersCollection = db.collection('users');
-
-    const result = await usersCollection.updateOne(
-        // for user id
-        {id: userId },
-        // push the new recipes
-        { $push: { recipes: { $each: recipes } } }
-    );
-
-    if (result.matchedCount === 0) {
-        throw new Error('user not found!');
-    }
-
-    console.log(`recipes added to userId: ${userId}`);
-    return { userId, recipes };
-}
-
-// simple but effective
-async function getUserRecipes(userId) {
-    let user = await getUser({ userId: userId });
-    return user?.recipes || { };
 }
 
 async function editUser(userId, newUsername, newEmail) {
@@ -304,4 +276,4 @@ async function deleteUser(userId) {
     return { userId };
 }
 
-module.exports = { createUser, loginUser, addUserRecipes, getUserRecipes, deleteUser, editUser };
+module.exports = { createUser, loginUser, deleteUser, editUser };

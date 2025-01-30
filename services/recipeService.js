@@ -1,4 +1,5 @@
 const fs = require('fs').promises;
+const { connectDB } = require('./db')
 // for creating unique user identification numbers
 const { 
     v4: uuidv4,
@@ -24,6 +25,7 @@ class Ingredient {
     // conversion ratios to milliliters
     static units = {
         ml: 1,
+        g: 1,
         l: 1000,
         tsp: 5,
         tbs: 15,
@@ -49,15 +51,11 @@ class Ingredient {
             this.quantityInMl = null;
         }
 
-        // if the unit does not exist in the supported units
-        if (!Ingredient.units[unit]) {
-            throw new Error(`unsupported unit: ${unit}`);
-        }
-
         this.quantity = quantity;
         this.unit = unit || "undefined";
         this.name = name;
         this.details = details;
+        this.ingredientId = uuidv4();
     }
 
     // converts the ingredient to a specific unit for human consumption
@@ -97,17 +95,18 @@ class Recipe {
             throw new Error("all fields (name, description, authors, servingSize, ingredients, method) are required.");
         }
 
-        // we have to validate ingredients are instances of the Ingredient class
-        if (!Array.isArray(ingredients) || !ingredients.every(ing => ing instanceof Ingredient)) {
-            throw new Error("all ingredients must be instances of the Ingredient class.");
-        }
+        this.ingredients = ingredients.map(ing => {
+            if (ing instanceof Ingredient) {
+                return ing;
+            }
+            return new Ingredient(ing);
+        });
 
-        this.id = uuidv4(); // unique identification number for the recipe
+        this.recipeId = uuidv4(); // unique identification number for the recipe
         this.name = name;
         this.description = description;
         this.authors = Array.isArray(authors) ? authors : [authors]; // make sure authors is an array
         this.servingSize = servingSize;
-        this.ingredients = ingredients;
         this.method = Array.isArray(method) ? method : [method]; // ensure method is an array (for each step)
     }
 
@@ -123,3 +122,31 @@ class Recipe {
         `;
     }
 }
+
+async function createRecipe(recipe) {
+    const db = await connectDB();
+    const recipesCollection = db.collection('recipes'); 
+
+    // check if recipe already exists in the database
+    const existingRecipe = await recipesCollection.findOne(recipe);
+
+    if(existingRecipe) {
+        throw new Error('recipe already exists!');
+    }
+
+    await recipesCollection.insertOne(recipe);
+    console.log(`recipe ${recipe.recipeId} created`);
+
+    return { id: recipe.recipeId };
+}
+
+async function getAuthorRecipes(authorId) {
+    const db = await connectDB();
+    const recipesCollection = db.collection('recipes'); 
+    
+    const authorRecipes = await recipesCollection.find({ authors: { $in: [authorId] } }).toArray();
+
+    return { authorRecipes: authorRecipes };
+}
+
+module.exports = { Ingredient, Recipe, createRecipe, getAuthorRecipes };
