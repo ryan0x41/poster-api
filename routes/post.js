@@ -26,6 +26,24 @@ router.post('/create', authenticateCookie, async (req, res) => {
     }
 });
 
+router.post('/comment', authenticateCookie, async (req, res) => {
+    try {
+        const { content, postId } = req.body;
+
+        const comment = new Comment({
+            author: req.user.id,
+            content: content,
+            postId: postId
+        });
+
+        const { commentId } = addCommentToPost(postId, comment);
+
+        res.status(201).json({ id: commentId });
+    } catch (error) {
+        console.error('error posting a comment on post: ', error.message);
+    }
+})
+
 router.get('/author/:authorId', async (req, res) => {
     try {
         const { authorId } = req.params;
