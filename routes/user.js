@@ -2,8 +2,14 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const router = express.Router();
 
+const multer = require('multer');
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
+const { uploadImage } = require('../services/uploadService');
+
 // the CRUD operations needed from userService
-const { createUser, loginUser, deleteUser, editUser } = require('../services/userService');
+const { createUser, loginUser, deleteUser, editUser, updateProfileImageUrl } = require('../services/userService');
 
 // security reasons, dont allow users to delete other user accounts and what not
 const authenticateCookie = require('../middleware/authenticateCookie');
@@ -44,6 +50,22 @@ router.post('/login', async (req, res) => {
         console.error(error);
         res.status(400).json({ error: error.message });
     }    
+});
+
+router.post('/profile-image', authenticateCookie, upload.single("image"), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: "no file uploaded" });
+          }
+
+          const imageUrl = await uploadImage(req.file.buffer, 'profile-image', req.user.id);
+          const { userId } = await updateProfileImageUrl(req.user.id, imageUrl);
+
+          res.json({ userId: userId, imageUrl: imageUrl });
+    } catch (error) {
+        console.error("error uploading profile image:", error);
+        res.status(500).json({ error: error });
+    }
 });
 
 router.post('/delete-account', authenticateCookie, async (req, res) => {

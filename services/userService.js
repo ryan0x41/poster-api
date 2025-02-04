@@ -194,6 +194,27 @@ async function loginUser(usernameOrEmail, password) {
     return { token, user: { id: user.id, username: user.username, email: user.email } };
 }
 
+async function updateProfileImageUrl(userId, imageUrl) {
+    const db = await connectDB();
+    const usersCollection = db.collection('users');
+
+    const user = await usersCollection.findOne({ id: userId });
+    if(!user) {
+        throw new Error('user not found!');
+    }
+
+    const result = await usersCollection.updateOne(
+        { id: userId },
+        { $set: { profileImageUrl: imageUrl } }
+    );
+
+    if (result.matchedCount === 0) {
+        throw new Error('failed to update profile picture url');
+    }
+
+    return { userId };
+}
+
 async function editUser(userId, newUsername, newEmail) {
     const db = await connectDB();
     const usersCollection = db.collection('users');
@@ -276,4 +297,4 @@ async function deleteUser(userId) {
     return { userId };
 }
 
-module.exports = { createUser, loginUser, deleteUser, editUser };
+module.exports = { createUser, loginUser, deleteUser, editUser, updateProfileImageUrl };
