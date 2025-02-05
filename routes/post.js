@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { createPost, getAuthorPosts, addCommentToPost, getPostWithComments, toggleLikeOnComment, toggleLikeOnPost } = require('../services/postService');
+
+const { createPost, getAuthorPosts, getPostWithComments, toggleLikeOnPost } = require('../services/postService');
 
 const Post = require('../models/Post');
-const Comment = require('../models/Comment');
 
 const authenticateCookie = require('../middleware/authenticateCookie');
 
@@ -16,6 +16,8 @@ router.post('/create', authenticateCookie, async (req, res) => {
         };
 
         const post = new Post(postData);
+
+        console.log(post)
 
         if (post.author !== req.user.id) {
             throw new Error('you can only create a post for yourself!');
@@ -30,24 +32,16 @@ router.post('/create', authenticateCookie, async (req, res) => {
     }
 });
 
-router.post('/comment', authenticateCookie, async (req, res) => {
+// DEBUG
+router.post('/test', async (req, res) => {
     try {
-        const { content, postId } = req.body;
-
-        const newComment = new Comment({
-            author: req.user.id,
-            content: content,
-            postId: postId
-        });
-
-        const comment = addCommentToPost(postId, newComment.id);
-
-        res.status(201).json({ id: comment });
+        res.status(201).json(req.body);
     } catch (error) {
-        console.error('error posting a comment on post: ', error.message);
+        console.error("error test endpoint");
         res.status(400).json({ error: error.message });
     }
 });
+// END_DEBUG
 
 router.post('/like', authenticateCookie, async (req, res) => {
     try {
@@ -61,19 +55,6 @@ router.post('/like', authenticateCookie, async (req, res) => {
         console.error("error liking post:", error.message);
         res.status(400).json({ error: error.message });
     }
-});
-
-router.post('/comment/like', authenticateCookie, async (req, res) => {
-    try {
-        const { commentId } = req.body;
-        const authorId = req.user.id;
-
-        const { message } = await toggleLikeOnComment(authorId, commentId);
-
-        res.status(200).json({ message: message, commentId: commentId });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }   
 });
 
 router.get('/author/:authorId', async (req, res) => {

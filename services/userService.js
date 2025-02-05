@@ -191,7 +191,7 @@ async function loginUser(usernameOrEmail, password) {
     );
 
     // return the token once generated
-    return { token, user: { id: user.id, username: user.username, email: user.email } };
+    return { token, user: { id: user.id, username: user.username, email: user.email, passwordHash: user.passwordHash } };
 }
 
 async function updateProfileImageUrl(userId, imageUrl) {
@@ -287,14 +287,15 @@ async function deleteUser(userId) {
     const db = await connectDB();
     const usersCollection = db.collection('users');
 
-    // delete user by id
+    const user = await usersCollection.findOne({ id: userId });
+
     const result = await usersCollection.deleteOne({ id: userId });
     if (result.deletedCount === 0) {
         throw new Error('user not found!');
     }
 
-    console.log(`user with id ${userId} deleted`);
-    return { userId };
+    console.log(`user with id ${user.id} deleted`);
+    return user;
 }
 
 module.exports = { createUser, loginUser, deleteUser, editUser, updateProfileImageUrl };
