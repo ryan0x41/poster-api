@@ -9,7 +9,7 @@ const upload = multer({ storage });
 const { uploadImage } = require('../services/uploadService');
 
 // the CRUD operations needed from userService
-const { createUser, loginUser, deleteUser, editUser, updateProfileImageUrl } = require('../services/userService');
+const { createUser, loginUser, deleteUser, editUser, resetPassword, updateProfileImageUrl, getUserProfile } = require('../services/userService');
 
 // security reasons, dont allow users to delete other user accounts and what not
 const authenticateCookie = require('../middleware/authenticateCookie');
@@ -50,6 +50,42 @@ router.post('/login', async (req, res) => {
         console.error(error);
         res.status(400).json({ error: error.message });
     }    
+});
+
+router.post('/reset-password', authenticateCookie, async (req, res) => {
+    try {
+        const { oldPassword, newPassword } = req.body;
+        const { message } = await resetPassword(oldPassword, newPassword, req.user.id);
+
+        res.status(202).json({ message: message });
+    } catch (error) {
+        console.error(error);
+        res.status(401).json({ error: error.message });
+    }
+});
+
+router.post('/update-info', authenticateCookie, async (req, res) => {
+    try {
+        const { newEmail, newUsername } = req.body;
+        const { message, token } = await editUser(newUsername, newEmail, req.user.id);
+
+        res.status(202).json({ message: message, token });
+    } catch (error) {
+        console.error(error);
+        res.status(401).json({ error: error.message });
+    }
+});
+
+router.get('/profile/:username', async (req, res) => {
+    try {
+        const username = req.params.username;
+        const { message, user } = await getUserProfile(username);
+
+        res.status(200).json({ message: message, user})
+    } catch (error) {
+        console.error(error);
+        res.status(401).json({ error: error.message });
+    }
 });
 
 router.post('/profile-image', authenticateCookie, upload.single("image"), async (req, res) => {

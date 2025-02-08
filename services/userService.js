@@ -32,7 +32,7 @@ const SALT_ROUNDS = 10;
 
 class User {
     constructor(username, email, passwordHash) {
-        this.account_creation = Date.now();
+        this.accountCreation = Date.now();
         this.id = uuidv4();
         this.username = username;
         this.email = email;
@@ -137,7 +137,7 @@ async function createUser(username, email, password) {
         username,
         email,
         passwordHash,
-        account_creation: Date.now(),
+        accountCreation: Date.now(),
     };
 
     // insert into mongodb users collection
@@ -194,6 +194,46 @@ async function loginUser(usernameOrEmail, password) {
     return { token, user: { id: user.id, username: user.username, email: user.email, passwordHash: user.passwordHash } };
 }
 
+async function getUserProfile(username) {
+    const db = await connectDB();
+    const usersCollection = db.collection('users');
+
+    const user = await usersCollection.findOne({ username: username });
+    
+    return { message: "retrieved user successfully", user: { id: user.id, username: user.username, email: user.email, profileImageUrl: user.profileImageUrl, accountCreation: user.accountCreation }}
+}
+
+async function resetPassword(oldPassword, newPassword, userId) {
+    const db = await connectDB();
+    const usersCollection = db.collection('users');
+
+    const user = await usersCollection.findOne({ id: userId });
+
+    if(!user) {
+        throw new Error('user not found!');
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, user.passwordHash);
+    if(!isMatch) {
+        throw new Error('invalid password!');
+    }
+
+    // validate password
+    const passwordRegex = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/;
+    if (!passwordRegex.test(newPassword)) {
+        throw new Error('passwords must contain one uppercase letter, one lowercase letter, one digit and one special character');
+    }
+
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+
+    await usersCollection.updateOne(
+        { id: userId },
+        { $set: { passwordHash: newPasswordHash } }
+    );
+
+    return { message: "password updated successfully" }
+}
+
 async function updateProfileImageUrl(userId, imageUrl) {
     const db = await connectDB();
     const usersCollection = db.collection('users');
@@ -215,7 +255,7 @@ async function updateProfileImageUrl(userId, imageUrl) {
     return { userId };
 }
 
-async function editUser(userId, newUsername, newEmail) {
+async function editUser(newUsername, newEmail, userId) {
     const db = await connectDB();
     const usersCollection = db.collection('users');
 
@@ -226,6 +266,7 @@ async function editUser(userId, newUsername, newEmail) {
 
     // validate
     if (newUsername) {
+        console.log(newUsername);
         const usernameRegex = /^[a-z0-9_-]{4,}$/;
         if (!newUsername.match(usernameRegex)) {
             throw new Error('invalid username!');
@@ -276,10 +317,7 @@ async function editUser(userId, newUsername, newEmail) {
 
     console.log(`user with id ${userId} updated successfully!`);
 
-    return {
-        user: { id: updatedUser.id, username: updatedUser.username, email: updatedUser.email },
-        token
-    };
+    return { message: "updated info successfully", token };
 }
 
 // delete a user by an id
@@ -298,4 +336,4 @@ async function deleteUser(userId) {
     return user;
 }
 
-module.exports = { createUser, loginUser, deleteUser, editUser, updateProfileImageUrl };
+module.exports = { createUser, loginUser, deleteUser, editUser, resetPassword, updateProfileImageUrl, getUserProfile };
