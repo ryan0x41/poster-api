@@ -18,7 +18,7 @@ router.post('/create', authenticateCookie, async (req, res) => {
 
         const { commentId } = await addCommentToPost(postId, newComment);
 
-        res.status(201).json({ commentId: commentId });
+        res.status(201).json({ message: "comment created successfully", commentId: commentId });
     } catch (error) {
         console.error('error posting a comment on post: ', error.message);
         res.status(400).json({ error: error.message });

@@ -15,7 +15,7 @@ router.post('/image', authenticateCookie, upload.single("image"), async (req, re
     
         const imageUrl = await uploadImage(req.file.buffer, 'images');
         
-        res.json({ imageUrl });
+        res.json({ message: "image uploaded successfully", imageUrl });
       } catch (error) {
         console.error("upload error:", error);
         res.status(500).json({ error: "image upload failed" });
