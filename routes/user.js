@@ -97,10 +97,10 @@ router.post('/profile-image', authenticateCookie, upload.single("image"), async 
           const imageUrl = await uploadImage(req.file.buffer, 'profile-image', req.user.id);
           const { userId } = await updateProfileImageUrl(req.user.id, imageUrl);
 
-          res.json({ userId: userId, imageUrl: imageUrl });
+          res.json({ message: "user profile image updated successfully", userId: userId, imageUrl: imageUrl });
     } catch (error) {
         console.error("error uploading profile image:", error);
-        res.status(500).json({ error: error });
+        res.status(500).json({ error: error.message });
     }
 });
 

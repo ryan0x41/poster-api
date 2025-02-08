@@ -25,23 +25,12 @@ router.post('/create', authenticateCookie, async (req, res) => {
 
         const postId = await createPost({ ...post });
 
-        res.status(201).json(postId);
+        res.status(201).json({ message: "post created successfully", postId: postId });
     } catch (error) {
         console.error("error creating post:", error.message);
         res.status(400).json({ error: error.message });
     }
 });
-
-// DEBUG
-router.post('/test', async (req, res) => {
-    try {
-        res.status(201).json(req.body);
-    } catch (error) {
-        console.error("error test endpoint");
-        res.status(400).json({ error: error.message });
-    }
-});
-// END_DEBUG
 
 router.post('/like', authenticateCookie, async (req, res) => {
     try {
@@ -62,7 +51,7 @@ router.get('/author/:authorId', async (req, res) => {
         const { authorId } = req.params;
         const posts = await getAuthorPosts(authorId);
 
-        res.status(200).json(posts);
+        res.status(200).json({ message: "posts retrieved successfully", posts: posts });
     } catch (error) {
         console.error("error finding author posts:", error.message);
         res.status(400).json({ error: error.message });
