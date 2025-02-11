@@ -133,6 +133,35 @@ async function toggleLikeOnComment(authorId, commentId) {
     };
 }
 
+async function searchPosts(searchQuery) {
+    const db = await connectDB();
+    const postCollection = db.collection('post');
+
+    if (!searchQuery || searchQuery.trim() === '') {
+        return { message: 'search query is empty', postIds: [] };
+    }
+
+    // case insensitive, allow regex
+    const posts = await postCollection.find({
+        $or: [
+            // search title and content
+            { title: { $regex: searchQuery, $options: 'i' } },
+            { content: { $regex: searchQuery, $options: 'i' } }
+        ]
+    }).toArray();
+
+    // structure the json response
+    const structuredPosts = posts.map(post => ({
+        postId: post.postId,
+        title: post.title,
+        authorId: post.author,
+    }));
+
+    return {
+        message: posts.length ? 'posts found' : 'no posts match the search query',
+        posts: structuredPosts
+    };
+}
 
 
 async function getPostWithComments(postId) {
@@ -140,21 +169,21 @@ async function getPostWithComments(postId) {
     const postCollection = db.collection('post');
     const commentCollection = db.collection('comments');
 
-    const post = await postCollection.findOne({ postId });
+    const post = await postCollection.findOne({ postId }, { projection: { _id: 0 } });
     if (!post) {
         throw new Error('post not found');
     }
 
     const comments = await commentCollection.find({ postId }).toArray();
 
-    return { ...post, comments };
+    return { message: 'success', post: { ...post, comments } };
 }
 
 async function getAuthorPosts(authorId) {
     const db = await connectDB();
     const postCollection = db.collection('post'); 
 
-    const posts = await postCollection.find({ author: authorId }).toArray();
+    const posts = await postCollection.find({ author: authorId }, { projection: { _id: 0 } }).toArray();
 
     if (posts.length === 0) {
         console.log(`No posts found for author ${authorId}`);
@@ -163,4 +192,4 @@ async function getAuthorPosts(authorId) {
     return posts;
 }
 
-module.exports = { createPost, getAuthorPosts, addCommentToPost, getPostWithComments, toggleLikeOnComment, toggleLikeOnPost };
+module.exports = { createPost, getAuthorPosts, addCommentToPost, getPostWithComments, toggleLikeOnComment, toggleLikeOnPost, searchPosts };

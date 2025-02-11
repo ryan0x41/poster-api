@@ -1,8 +1,8 @@
 const { MongoClient } = require('mongodb');
 
 // connection uri and database name
-const uri = process.env.MONGO_URI || 'mongodb://localhost:27017';
-const dbName = process.env.DB_NAME || 'forked';
+const uri = process.env.MONGO_URI
+const dbName = process.env.DB_NAME
 
 let client;
 let db;

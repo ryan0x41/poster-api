@@ -9,7 +9,7 @@ const upload = multer({ storage });
 const { uploadImage } = require('../services/uploadService');
 
 // the CRUD operations needed from userService
-const { createUser, loginUser, deleteUser, editUser, resetPassword, updateProfileImageUrl, getUserProfile } = require('../services/userService');
+const { createUser, loginUser, deleteUser, editUser, followUser, resetPassword, updateProfileImageUrl, getUserProfile, getUserFeed } = require('../services/userService');
 
 // security reasons, dont allow users to delete other user accounts and what not
 const authenticateCookie = require('../middleware/authenticateCookie');
@@ -100,6 +100,29 @@ router.post('/profile-image', authenticateCookie, upload.single("image"), async 
           res.json({ message: "user profile image updated successfully", userId: userId, imageUrl: imageUrl });
     } catch (error) {
         console.error("error uploading profile image:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.post('/follow', authenticateCookie, async (req, res) => {
+    try {
+        const { userIdToFollow } = req.body;
+        const { message } = await followUser(req.user.id, userIdToFollow);
+
+        res.status(200).json({ message });
+    } catch (error) {
+        console.error("error following user:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.get('/feed/:page', authenticateCookie, async (req, res) => {
+    try {
+        const { message, posts, page } = await getUserFeed(req.user.id, req.params.page);
+
+        res.status(200).json({ message, posts, page });
+    } catch (error) {
+        console.error("error getting home feed:", error);
         res.status(500).json({ error: error.message });
     }
 });

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { createPost, getAuthorPosts, getPostWithComments, toggleLikeOnPost } = require('../services/postService');
+const { createPost, getAuthorPosts, getPostWithComments, toggleLikeOnPost, searchPosts } = require('../services/postService');
 
 const Post = require('../models/Post');
 
@@ -42,6 +42,30 @@ router.post('/like', authenticateCookie, async (req, res) => {
         res.status(200).json({ message: message, postId: postId });
     } catch (error) {
         console.error("error liking post:", error.message);
+        res.status(400).json({ error: error.message });
+    }
+});
+
+router.get('/:postId', async (req, res) => {
+    try {
+        const { postId } = req.params;
+        
+        const { message, post } = await getPostWithComments(postId);
+        res.status(302).json({ message: message, post: post });
+    } catch (error) {
+        console.error("error finding post:", error.message);
+        res.status(400).json({ error: error.message });
+    }
+});
+
+router.post('/search', async (req, res) => {
+    try {
+        const { searchQuery } = req.body;
+        
+        const { message, posts } = await searchPosts(searchQuery);
+        res.status(302).json({ message, posts });
+    } catch (error) {
+        console.error("error searching post:", error.message);
         res.status(400).json({ error: error.message });
     }
 });

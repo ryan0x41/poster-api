@@ -16,75 +16,10 @@ const {
     v4: uuidv4,
 } = require('uuid');
 
-// file that stores user information
-const USERS_FILE = process.env.USERS_FILE || 'users.json';
 // more security = more computing power
 const SALT_ROUNDS = 10;
 
-/*
-    the user class should hold following information
-        - account creation date
-        - a unique uuid (user identification number e.g. 110ec58a-a0f2-4ac4-8393-c866d813b8d1)
-        - a username
-        - an email
-        - a password (hashed)
-*/
-
-class User {
-    constructor(username, email, passwordHash) {
-        this.accountCreation = Date.now();
-        this.id = uuidv4();
-        this.username = username;
-        this.email = email;
-        this.passwordHash = passwordHash
-    }
-}
-
-// returns users from file
-async function loadUsers() {
-    try {
-        // use fs library to read data
-        const data = await fs.readFile(USERS_FILE, 'utf-8');
-        // parse data into JSON
-        return JSON.parse(data);
-    } catch (error) {
-        // ENOENT = no such file or directory, return empty array
-        if (error.code === 'ENOENT') {
-            return [];
-        }
-        // i dont know what happened, throw the error
-        throw error;
-    }
-}
-
-// saves users to file
-async function saveUsers(users) {
-    try {
-        await fs.writeFile(USERS_FILE, JSON.stringify(users, null, 2), 'utf-8');
-    } catch (error) {
-        throw new Error('failed to update users file');
-    }
-}
-
-// middleware
-function authenticateToken(req, res, next) {
-    // extract token from the request header 
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-
-    // i should do oneliners more often
-    if (token == null) return res.sendStatus(401);
-
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) {
-            console.error(err);
-            return res.sendStatus(403); // invalid token
-        }
-        req.user = user;
-        next();
-    });
-}
-
+// validate user creation input 
 function validateRegistration(username, email, password) {
     // SOURCE: https://stackoverflow.com/questions/201323/how-can-i-validate-an-email-address-using-a-regular-expression
     const emailRegex = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)])/;
@@ -109,7 +44,7 @@ function validateRegistration(username, email, password) {
     }
 }
 
-// creates a user object, appends to existing or newly created .json file
+// create a user by username, email and password
 async function createUser(username, email, password) {
     const db = await connectDB();
     const usersCollection = db.collection('users');
@@ -138,6 +73,7 @@ async function createUser(username, email, password) {
         email,
         passwordHash,
         accountCreation: Date.now(),
+        following: []
     };
 
     // insert into mongodb users collection
@@ -148,17 +84,35 @@ async function createUser(username, email, password) {
     return { id: user.id, username: user.username, email: user.email };
 }
 
-// this is so much cleaner than fs wow
-async function getUser(query) {
+// give a user feed limited by posts based on the users following
+async function getUserFeed(userId, page) {
     const db = await connectDB();
     const usersCollection = db.collection('users');
+    const postsCollection = db.collection('post'); 
 
-    // query by id, username or email
-    const user = await usersCollection.findOne(query);
-    return user || null;
+    const user = await usersCollection.findOne({ id: userId });
+    if (!user) {
+        throw new Error('user not found!');
+    }
+
+    const followingList = user.following || [];
+
+    const postsPerPage = 10;
+    const pageNumber = parseInt(page, 10) || 1;
+    const skipCount = (pageNumber - 1) * postsPerPage;
+
+    const feedPosts = await postsCollection
+        .find({ author: { $in: followingList } }, { projection: { _id: 0 } })
+        .sort({ postDate: -1 })
+        .skip(skipCount)
+        .limit(postsPerPage)
+        .toArray();
+    
+
+    return { message: "user feed retrieved successfully", posts: feedPosts, page: pageNumber };
 }
 
-
+// grab an authToken using usernameOrEmail and password
 async function loginUser(usernameOrEmail, password) {
     const db = await connectDB();
     const usersCollection = db.collection('users');
@@ -194,15 +148,20 @@ async function loginUser(usernameOrEmail, password) {
     return { token, user: { id: user.id, username: user.username, email: user.email, passwordHash: user.passwordHash } };
 }
 
+// get a user profile (general information) by username
 async function getUserProfile(username) {
     const db = await connectDB();
     const usersCollection = db.collection('users');
 
     const user = await usersCollection.findOne({ username: username });
+    if(!user) {
+        throw new Error('user not found!');
+    }
     
     return { message: "retrieved user successfully", user: { id: user.id, username: user.username, email: user.email, profileImageUrl: user.profileImageUrl, accountCreation: user.accountCreation }}
 }
 
+// reset a password using oldPassword and userId
 async function resetPassword(oldPassword, newPassword, userId) {
     const db = await connectDB();
     const usersCollection = db.collection('users');
@@ -234,6 +193,7 @@ async function resetPassword(oldPassword, newPassword, userId) {
     return { message: "password updated successfully" }
 }
 
+// add a profile image url by userId
 async function updateProfileImageUrl(userId, imageUrl) {
     const db = await connectDB();
     const usersCollection = db.collection('users');
@@ -255,6 +215,44 @@ async function updateProfileImageUrl(userId, imageUrl) {
     return { userId };
 }
 
+// follow a user by userId
+async function followUser(userId, userIdToFollow) {
+    const db = await connectDB();
+    const usersCollection = db.collection('users');
+
+    // both users should exist
+    const user = await usersCollection.findOne({ id: userId });
+    if (!user) {
+        throw new Error('user not found!');
+    }
+
+    const userToFollow = await usersCollection.findOne({ id: userIdToFollow });
+    if (!userToFollow) {
+        throw new Error('user to follow not found');
+    }
+
+    // check if the user is following
+    const isFollowing = user.following && user.following.includes(userIdToFollow);
+
+    if (isFollowing) {
+        // unfollow, remove userIdToFollow from the following array
+        await usersCollection.updateOne(
+            { id: userId },
+            { $pull: { following: userIdToFollow } }
+        );
+        return { message: 'user unfollowed successfully' };
+    } else {
+        // add userIdToFollow to the following array
+        await usersCollection.updateOne(
+            { id: userId },
+            { $addToSet: { following: userIdToFollow } }
+        );
+        return { message: 'user followed successfully' };
+    }
+}
+
+
+// edit a users email or username by userId
 async function editUser(newUsername, newEmail, userId) {
     const db = await connectDB();
     const usersCollection = db.collection('users');
@@ -336,4 +334,4 @@ async function deleteUser(userId) {
     return user;
 }
 
-module.exports = { createUser, loginUser, deleteUser, editUser, resetPassword, updateProfileImageUrl, getUserProfile };
+module.exports = { createUser, loginUser, deleteUser, editUser, followUser, resetPassword, updateProfileImageUrl, getUserProfile, getUserFeed };
