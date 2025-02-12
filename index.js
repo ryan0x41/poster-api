@@ -13,6 +13,8 @@ const userRouter = require('./routes/user')
 const postRouter = require('./routes/post')
 const commentRouter = require('./routes/comment')
 const uploadRouter = require('./routes/upload')
+const conversationRouter = require('./routes/conversation')
+const messageRouter = require('./routes/message')
 
 app.use(cookieParser());
 // middleware to parse json
@@ -24,6 +26,8 @@ app.use('/user', userRouter);
 app.use('/post', postRouter);
 app.use('/comment', commentRouter);
 app.use('/upload', uploadRouter);
+app.use('/conversation', conversationRouter);
+app.use('/message', messageRouter);
 
 // ejs
 app.engine('ejs', engine);
