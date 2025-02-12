@@ -9,6 +9,7 @@ lerna-debug.log*
 .config
 users.json
 api_tester.py
+.dockerignore
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
