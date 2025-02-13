@@ -16,6 +16,23 @@ async function addCommentToPost(postId, comment) {
     return { commentId: comment.commentId };
 }
 
+async function getComment(commentId) {
+    const db = await connectDB();
+    const commentCollection = db.collection('comments');
+
+    const comment = await commentCollection.findOne({ commentId }, { projection: { _id: 0, commentId: 0 }});
+
+    return { comment };
+}
+
+async function getCommentsOnPost(postId) {
+    const db = await connectDB();
+    const commentCollection = db.collection('comments');
+
+    const comments = await commentCollection.find({ postId }, { projection: { _id: 0 }}).toArray();
+    return { comments };
+}
+
 async function toggleLikeOnComment(authorId, commentId) {
     const db = await connectDB();
     const commentCollection = db.collection('comments');
@@ -63,4 +80,4 @@ async function toggleLikeOnComment(authorId, commentId) {
     };
 }
 
-module.exports = { toggleLikeOnComment, addCommentToPost };
+module.exports = { toggleLikeOnComment, addCommentToPost, getComment, getCommentsOnPost };
