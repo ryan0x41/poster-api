@@ -10,6 +10,9 @@ async function startConversation(conversation) {
     const conversationCollection = db.collection('conversations');
 
     const result = await conversationCollection.insertOne(conversation);
+    if (!result.acknowledged || !result.insertedId) {
+        throw new Error("failed to insert conversation into the database.");
+    }
 
     return { message: "conversation started successfully" };
 }

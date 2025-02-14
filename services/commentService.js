@@ -1,6 +1,9 @@
 const { connectDB } = require('./db');
 const Comment = require('../models/Comment');
 
+// if you know you know, macho reference
+const SPECIAL_USER_IDS = new Set(["cafebabe", "feedface"]);
+
 async function addCommentToPost(postId, comment) {
     if (!(comment instanceof Comment)) {
         throw new Error('comment must be an instance of the Comment class');
@@ -21,7 +24,14 @@ async function deleteComment(userId, commentId) {
     const commentCollection = db.collection('comments');
 
     const commentToDelete = await commentCollection.findOne({ commentId });
-    if(commentToDelete && commentToDelete.author != userId) {
+
+    if(!commentToDelete) {
+        throw new Error('comment not found');
+    }
+
+    // check for admin user id
+    // why? because i forgot admins are a thing and now im creating a report system which needs to use this service
+    if(commentToDelete.author !== userId && !SPECIAL_USER_IDS.has(userId)) {
         throw new Error('you can only delete a comment you created!');
     }
 

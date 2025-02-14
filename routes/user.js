@@ -19,7 +19,8 @@ const { getFollowers,
         resetPassword,
         updateProfileImageUrl,
         getUserProfile,
-        getUserFeed } = require('../services/userService');
+        getUserFeed,
+        promote } = require('../services/userService');
 
 // security reasons, dont allow users to delete other user accounts and what not
 const authenticateCookie = require('../middleware/authenticateCookie');
@@ -41,6 +42,22 @@ router.post('/register', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(400).json({ error: error.message });
+    }
+});
+
+router.post('/promote', authenticateCookie, async (req, res) => {
+    try {
+        if(!req.user.isAdmin) {
+            res.status(401).json({ message: "you have to be admin to promote a user to admin!" });
+        }
+
+        const { userId } = req.body;
+
+        const { message } = await promote(userId);
+        res.status(200).json({ message: 'user promoted successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
     }
 });
 
@@ -195,7 +212,5 @@ router.post('/delete-account', authenticateCookie, async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 });
-
-
 
 module.exports = router;

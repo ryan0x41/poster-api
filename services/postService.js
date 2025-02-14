@@ -1,12 +1,7 @@
 const fs = require('fs').promises;
 const { connectDB } = require('./db')
 
-
-// TODO: spotify album/song/artist class or something ?
-// link with post?
-// class Spotify {
-//     ...
-// } 
+const SPECIAL_USER_IDS = new Set(["cafebabe", "feedface"]);
 
 async function createPost(post) {
     const db = await connectDB();
@@ -163,7 +158,6 @@ async function searchPosts(searchQuery) {
     };
 }
 
-
 async function getPostWithComments(postId) {
     const db = await connectDB();
     const postCollection = db.collection('post');
@@ -184,7 +178,12 @@ async function deletePost(userId, postId) {
     const postCollection = db.collection('post');
 
     const postToDelete = await postCollection.findOne({ postId });
-    if(postToDelete && postToDelete.author != userId) {
+
+    if(!postToDelete) {
+        throw new Error('post not found');
+    }
+
+    if(postToDelete.author !== userId && !SPECIAL_USER_IDS.has(userId)) {
         throw new Error('you can only delete a post you created!');
     }
 

@@ -73,7 +73,8 @@ async function createUser(username, email, password) {
         email,
         passwordHash,
         accountCreation: Date.now(),
-        following: []
+        following: [],
+        isAdmin: false
     };
 
     // insert into mongodb users collection
@@ -82,6 +83,21 @@ async function createUser(username, email, password) {
 
     // return the newly created user
     return { id: user.id, username: user.username, email: user.email };
+}
+
+// promote user to admin
+async function promote(userId) {
+    const db = await connectDB();
+    const usersCollection = db.collection('users');
+
+    const result = await usersCollection.updateOne(
+        { id: userId },
+        { $set: { isAdmin: true } }
+    );
+
+    if (result.matchedCount === 0) {
+        return { message: 'user not found' };
+    }
 }
 
 // give a user feed limited by posts based on the users following
@@ -171,7 +187,7 @@ async function loginUser(usernameOrEmail, password) {
     // since the password check passed, we can create a token and pass it to the user
     const token = jwt.sign(
         // RESEARCH: https://stackoverflow.com/questions/56855440/in-jwt-the-sign-method
-        { id: user.id, username: user.username, email: user.email },
+        { id: user.id, username: user.username, email: user.email, isAdmin: user.isAdmin },
         JWT_SECRET,
         { expiresIn: '24h' }
     );
@@ -340,7 +356,7 @@ async function editUser(newUsername, newEmail, userId) {
     // generate new token with updated information
     const updatedUser = await usersCollection.findOne({ id: userId });
     const token = jwt.sign(
-        { id: updatedUser.id, username: updatedUser.username, email: updatedUser.email },
+        { id: updatedUser.id, username: updatedUser.username, email: updatedUser.email, isAdmin: user.isAdmin },
         JWT_SECRET,
         { expiresIn: '24h' }
     );
@@ -376,4 +392,5 @@ module.exports = { getFollowers,
                    resetPassword,
                    updateProfileImageUrl,
                    getUserProfile,
-                   getUserFeed };
+                   getUserFeed,
+                   promote };
