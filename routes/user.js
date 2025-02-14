@@ -9,7 +9,17 @@ const upload = multer({ storage });
 const { uploadImage } = require('../services/uploadService');
 
 // the CRUD operations needed from userService
-const { createUser, loginUser, deleteUser, editUser, followUser, resetPassword, updateProfileImageUrl, getUserProfile, getUserFeed } = require('../services/userService');
+const { getFollowers,
+        getFollowing,
+        createUser,
+        loginUser,
+        deleteUser,
+        editUser,
+        followUser,
+        resetPassword,
+        updateProfileImageUrl,
+        getUserProfile,
+        getUserFeed } = require('../services/userService');
 
 // security reasons, dont allow users to delete other user accounts and what not
 const authenticateCookie = require('../middleware/authenticateCookie');
@@ -123,6 +133,30 @@ router.get('/feed/:page', authenticateCookie, async (req, res) => {
         res.status(200).json({ message, posts, page });
     } catch (error) {
         console.error("error getting home feed:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.get('/following/:userId', async (req, res) => {
+    try {
+        const userId = req.params.userId;
+
+        const { message, following } = await getFollowing(userId);
+        res.status(200).json({ message, following });
+    } catch (error) {
+        console.error("error user following:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.get('/followers/:userId', async (req, res) => {
+    try {
+        const userId = req.params.userId;
+
+        const { message, followers } = await getFollowers(userId);
+        res.status(200).json({ message, followers });
+    } catch (error) {
+        console.error("error user followers:", error);
         res.status(500).json({ error: error.message });
     }
 });

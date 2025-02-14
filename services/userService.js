@@ -112,6 +112,38 @@ async function getUserFeed(userId, page) {
     return { message: "user feed retrieved successfully", posts: feedPosts, page: pageNumber };
 }
 
+// grab user followers
+async function getFollowers(userId) {
+    const db = await connectDB();
+    const usersCollection = db.collection('users');
+
+    // all users where userId is in their following array
+    const followers = await usersCollection
+        .find({ following: userId }, { projection: { _id: 0, email: 0, passwordHash: 0, following: 0 } })
+        .toArray();
+
+    return { message: "user followers retrieved successfully", followers };
+}
+
+// grab user following
+async function getFollowing(userId) {
+    const db = await connectDB();
+    const usersCollection = db.collection('users');
+
+    const user = await usersCollection.findOne({ id: userId });
+    if(!user) {
+        throw new Error('user not found!');
+    }
+
+    const followingList = user.following || [];
+
+    const followingUsers = await usersCollection
+        .find({ id: { $in: followingList } }, { projection: { _id: 0, id: 1, username: 1, accountCreation: 1 } })
+        .toArray();
+
+    return { message: "user following retrieved successfully", following: followingUsers };
+}
+
 // grab an authToken using usernameOrEmail and password
 async function loginUser(usernameOrEmail, password) {
     const db = await connectDB();
@@ -334,4 +366,14 @@ async function deleteUser(userId) {
     return user;
 }
 
-module.exports = { createUser, loginUser, deleteUser, editUser, followUser, resetPassword, updateProfileImageUrl, getUserProfile, getUserFeed };
+module.exports = { getFollowers,
+                   getFollowing,
+                   createUser,
+                   loginUser,
+                   deleteUser,
+                   editUser,
+                   followUser,
+                   resetPassword,
+                   updateProfileImageUrl,
+                   getUserProfile,
+                   getUserFeed };
