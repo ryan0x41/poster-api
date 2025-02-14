@@ -21,7 +21,7 @@ async function createPost(post) {
     await postCollection.insertOne(post);
     console.log(`post ${post.postId} created`);
 
-    return { id: post.postId };
+    return { postId: post.postId };
 }
 
 async function addCommentToPost(postId, comment) {

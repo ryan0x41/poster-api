@@ -21,9 +21,9 @@ router.post('/create', authenticateCookie, async (req, res) => {
             throw new Error('you can only create a post for yourself!');
         }
 
-        const postId = await createPost({ ...post });
+        const { postId } = await createPost({ ...post });
 
-        res.status(201).json({ message: "post created successfully", postId: postId });
+        res.status(201).json({ message: "post created successfully", postId });
     } catch (error) {
         console.error("error creating post:", error.message);
         res.status(400).json({ error: error.message });
