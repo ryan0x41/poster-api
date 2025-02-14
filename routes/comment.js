@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Comment = require('../models/Comment');
 
-const { toggleLikeOnComment, addCommentToPost, getComment, getCommentsOnPost } = require('../services/commentService');
+const { toggleLikeOnComment, deleteComment, addCommentToPost, getComment, getCommentsOnPost } = require('../services/commentService');
 
 const authenticateCookie = require('../middleware/authenticateCookie');
 
@@ -33,6 +33,16 @@ router.get('/:commentId', async (req, res) => {
         res.status(200).json({ message: "comment retrieved successfully", comment });
     } catch (error) {
         console.error('error retrieving comment: ', error.message);
+        res.status(400).json({ error: error.message });
+    }
+});
+
+router.delete('/delete/:commentId', authenticateCookie, async (req, res) => {
+    try {
+        const { message } = await deleteComment(req.user.id, req.params.commentId);
+        res.status(200).json({ message });
+    } catch (error) {
+        console.error("error deleting comment:", error.message);
         res.status(400).json({ error: error.message });
     }
 });

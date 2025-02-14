@@ -179,6 +179,23 @@ async function getPostWithComments(postId) {
     return { message: 'success', post: { ...post, comments } };
 }
 
+async function deletePost(userId, postId) {
+    const db = await connectDB();
+    const postCollection = db.collection('post');
+
+    const postToDelete = await postCollection.findOne({ postId });
+    if(postToDelete && postToDelete.author != userId) {
+        throw new Error('you can only delete a post you created!');
+    }
+
+    const result = await postCollection.deleteOne({ postId });
+    if(!result.deletedCount > 0) {
+        throw new Error('error deleting post');
+    }
+
+    return { message: 'success' };
+}
+
 async function getAuthorPosts(authorId) {
     const db = await connectDB();
     const postCollection = db.collection('post'); 
@@ -192,4 +209,4 @@ async function getAuthorPosts(authorId) {
     return posts;
 }
 
-module.exports = { createPost, getAuthorPosts, addCommentToPost, getPostWithComments, toggleLikeOnComment, toggleLikeOnPost, searchPosts };
+module.exports = { createPost, getAuthorPosts, addCommentToPost, getPostWithComments, toggleLikeOnComment, toggleLikeOnPost, searchPosts, deletePost };

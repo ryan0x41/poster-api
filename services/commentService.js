@@ -16,6 +16,23 @@ async function addCommentToPost(postId, comment) {
     return { commentId: comment.commentId };
 }
 
+async function deleteComment(userId, commentId) {
+    const db = await connectDB();
+    const commentCollection = db.collection('comments');
+
+    const commentToDelete = await commentCollection.findOne({ commentId });
+    if(commentToDelete && commentToDelete.author != userId) {
+        throw new Error('you can only delete a comment you created!');
+    }
+
+    const result = await commentCollection.deleteOne({ commentId });
+    if(!result.deletedCount > 0) {
+        throw new Error('error deleting comment');
+    }
+
+    return { message: 'success' };
+}
+
 async function getComment(commentId) {
     const db = await connectDB();
     const commentCollection = db.collection('comments');
@@ -80,4 +97,4 @@ async function toggleLikeOnComment(authorId, commentId) {
     };
 }
 
-module.exports = { toggleLikeOnComment, addCommentToPost, getComment, getCommentsOnPost };
+module.exports = { toggleLikeOnComment, addCommentToPost, deleteComment, getComment, getCommentsOnPost };

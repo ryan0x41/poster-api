@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { createPost, getAuthorPosts, getPostWithComments, toggleLikeOnPost, searchPosts } = require('../services/postService');
+const { deletePost, createPost, getAuthorPosts, getPostWithComments, toggleLikeOnPost, searchPosts } = require('../services/postService');
 
 const Post = require('../models/Post');
 
@@ -17,8 +17,6 @@ router.post('/create', authenticateCookie, async (req, res) => {
 
         const post = new Post(postData);
 
-        console.log(post)
-
         if (post.author !== req.user.id) {
             throw new Error('you can only create a post for yourself!');
         }
@@ -28,6 +26,16 @@ router.post('/create', authenticateCookie, async (req, res) => {
         res.status(201).json({ message: "post created successfully", postId: postId });
     } catch (error) {
         console.error("error creating post:", error.message);
+        res.status(400).json({ error: error.message });
+    }
+});
+
+router.delete('/delete/:postId', authenticateCookie, async (req, res) => {
+    try {
+        const { message } = await deletePost(req.user.id, req.params.postId);
+        res.status(200).json({ message });
+    } catch (error) {
+        console.error("error deleting post:", error.message);
         res.status(400).json({ error: error.message });
     }
 });
