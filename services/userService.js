@@ -135,7 +135,7 @@ async function getFollowers(userId) {
 
     // all users where userId is in their following array
     const followers = await usersCollection
-        .find({ following: userId }, { projection: { _id: 0, email: 0, passwordHash: 0, following: 0 } })
+        .find({ following: userId }, { projection: { _id: 0, email: 0, passwordHash: 0, following: 0, warnings: 0, isAdmin: 0 } })
         .toArray();
 
     return { message: "user followers retrieved successfully", followers };

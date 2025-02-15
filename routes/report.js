@@ -49,16 +49,21 @@ router.post('/process', authenticateCookie, async (req, res) => {
     }
 });
 
-router.get('/all/:pageNumber', async (req, res) => {
+router.get('/all/:pageNumber?', async (req, res) => {
     try {
-        const pageNumber = req.params.pageNumber;
-        const { reports } = await getReports(pageNumber)
+        const { pageNumber } = req.params;
+
+        const reports = await getReports(
+            pageNumber && Number.isInteger(Number(pageNumber)) && Number(pageNumber) > 0
+                ? Number(pageNumber)
+                : undefined
+        );
 
         res.status(200).json({ message: "reports fetched successfully", reports });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error.message });
     }
-})
+});
 
 module.exports = router;
