@@ -7,6 +7,8 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 const { uploadImage } = require('../services/uploadService');
+const { Notification, NotificationType } = require('../models/Notification');
+const { createNotification } = require('../services/notificationService');
 
 // the CRUD operations needed from userService
 const { getFollowers,
@@ -135,6 +137,16 @@ router.post('/follow', authenticateCookie, async (req, res) => {
     try {
         const { userIdToFollow } = req.body;
         const { message } = await followUser(req.user.id, userIdToFollow);
+
+        if(!message.includes('unfollowed')) {
+            // create a follow notifcation for the user that was followed
+            const followNotification = new Notification({
+                recipientId: userIdToFollow,
+                notificationMessage: `${req.user.username} has followed you.`,
+                notificationType: NotificationType.FOLLOW,
+            });
+            await createNotification(followNotification);
+        }
 
         res.status(200).json({ message });
     } catch (error) {

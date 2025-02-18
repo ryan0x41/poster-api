@@ -170,7 +170,19 @@ async function getPostWithComments(postId) {
 
     const comments = await commentCollection.find({ postId }).toArray();
 
-    return { message: 'success', post: { ...post, comments } };
+    return { message: 'retrieved post with comments successfully', post: { ...post, comments } };
+}
+
+async function getPost(postId) {
+    const db = await connectDB();
+    const postCollection = db.collection('post');
+
+    const post = await postCollection.findOne({ postId }, { projection: { _id: 0 } });
+    if (!post) {
+        throw new Error('post not found');
+    }
+
+    return { message: 'retrieved post successfully', post };
 }
 
 async function deletePost(userId, postId) {
@@ -208,4 +220,4 @@ async function getAuthorPosts(authorId) {
     return posts;
 }
 
-module.exports = { createPost, getAuthorPosts, addCommentToPost, getPostWithComments, toggleLikeOnComment, toggleLikeOnPost, searchPosts, deletePost };
+module.exports = { createPost, getAuthorPosts, addCommentToPost, getPostWithComments, toggleLikeOnComment, toggleLikeOnPost, searchPosts, deletePost, getPost };
