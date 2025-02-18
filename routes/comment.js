@@ -6,6 +6,10 @@ const { toggleLikeOnComment, deleteComment, addCommentToPost, getComment, getCom
 
 const authenticateCookie = require('../middleware/authenticateCookie');
 
+const { createNotification } = require('../services/notificationService');
+const { Notification, NotificationType } = require('../models/Notification');
+const { getPost } = require('../services/postService');
+
 router.post('/create', authenticateCookie, async (req, res) => {
     try {
         const { content, postId } = req.body;
@@ -17,6 +21,16 @@ router.post('/create', authenticateCookie, async (req, res) => {
         });
 
         const { commentId } = await addCommentToPost(postId, newComment);
+
+        const { post } = await getPost(postId);
+        if (post.author !== req.user.id) {
+            const commentNotification = new Notification({
+                recipientId: post.author,
+                notificationMessage: `${req.user.username} commented on your post.`,
+                notificationType: NotificationType.COMMENT,
+            });
+            await createNotification(commentNotification);
+        }
 
         res.status(201).json({ message: "comment created successfully", commentId: commentId });
     } catch (error) {
