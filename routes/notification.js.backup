@@ -22,13 +22,13 @@ router.get('/all/:pageNumber?', authenticateCookie, async (req, res) => {
     try {
         const { pageNumber } = req.params;
 
-        const { message, page, totalPages, totalNotifications, notifications } = await getNotifications(req.user.id,
+        const { message, notifications } = await getNotifications(req.user.id,
             pageNumber && Number.isInteger(Number(pageNumber)) && Number(pageNumber) > 0
                 ? Number(pageNumber)
                 : undefined
         );
 
-        res.status(200).json({ message, page, totalPages, totalNotifications, notifications });
+        res.status(200).json({ message, notifications });
     } catch (error) {
         console.error(error);
         res.status(400).json({ error: error.message });

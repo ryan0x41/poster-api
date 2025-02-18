@@ -26,7 +26,7 @@ async function getNotification(recipientId, notificationId) {
     const db = await connectDB();
     const notificationCollection = db.collection('notifications');
 
-    const notification = await notificationCollection.findOne({ notificationId });
+    const notification = await notificationCollection.findOne({ notificationId }, { projection: { _id: 0 }});
 
     if(!notification) {
         throw new Error('notification not found');
