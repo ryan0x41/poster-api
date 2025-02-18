@@ -2,7 +2,7 @@ const { v4: uuidv4 } = require('uuid');
 
 const NotificationType = Object.freeze({
     FOLLOW: "follow",
-    NOTIFCATION_MESSAGE: "notification_message",
+    MESSAGE: "notification_message",
     COMMENT: "comment"
 });
 
@@ -16,14 +16,14 @@ class Notification {
             throw new Error(`invalid type: ${type}. must be one of ${Object.values(NotificationType).join(", ")}`);
         }
 
+        this.created = new Date();
         this.notificationId = uuidv4();
         this.recipientId = recipientId;
         this.notificationMessage = notificationMessage;
         this.contentRedirect = contentRedirect;
-        this.created = new Date();
         this.read = false;
         
     }
 }
 
-module.exports = { Notification };
+module.exports = { Notification, NotificationType };

@@ -2,7 +2,7 @@ const express = require('express');
 const authenticateCookie = require('../middleware/authenticateCookie');
 const router = express.Router();
 const { Conversation } = require('../models/Conversation');
-const { startConversation, getConversations } = require('../services/conversationService');
+const { startConversation, getConversations, getConversation } = require('../services/conversationService');
 
 router.post('/create', authenticateCookie, async (req, res) => {
     try {
@@ -20,6 +20,18 @@ router.post('/create', authenticateCookie, async (req, res) => {
 
         res.status(201).json({ message, conversationId: conversation.conversationId });
 
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.get('/:conversationId', authenticateCookie, async (req, res) => {
+    try {
+        const conversationId = req.params.conversationId;
+        const { message, conversation } = await getConversation(conversationId);
+
+        res.status(200).json({ message, conversation});
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error.message });

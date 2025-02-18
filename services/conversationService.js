@@ -17,6 +17,23 @@ async function startConversation(conversation) {
     return { message: "conversation started successfully" };
 }
 
+async function getConversation(userId, conversationId) {
+    const db = await connectDB();
+    const conversationCollection = db.collection('conversations');
+
+    const conversation = await conversationCollection.findOne({ conversationId });
+
+    if(!conversation) {
+        throw new Error('conversation does not exist');
+    }
+
+    if(!conversation.participants.includes(userId)) {
+        throw new Error('you can only read conversations you participate in');
+    }
+
+    return { message: "conversation retrieved successfully", conversation };
+}
+
 async function getConversations(userId) {
     const db = await connectDB();
     const conversationCollection = db.collection('conversations');
@@ -26,4 +43,4 @@ async function getConversations(userId) {
     return { message: "conversations retrieved successfully", conversations };
 }
 
-module.exports = { startConversation, getConversations }
+module.exports = { startConversation, getConversations, getConversation };

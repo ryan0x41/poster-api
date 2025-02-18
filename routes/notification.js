@@ -59,16 +59,4 @@ router.patch('/delete/:notificationId', authenticateCookie, async (req, res) => 
     }
 });
 
-router.post('/test/create', authenticateCookie, async (req, res) => {
-    try {
-        const notification = new Notification(req.body);
-        const { message, notificationId } = await createNotification(notification);
-
-        res.status(200).json({ message, notificationId });
-    } catch (error) {
-        console.error(error);
-        res.status(400).json({ error: error.message });
-    }
-});
-
 module.exports = router;
