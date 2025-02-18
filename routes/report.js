@@ -5,7 +5,7 @@ const { Report, ContentType } = require('../models/Report')
 
 const { createReport, getReports, processReport } = require('../services/reportService')
 
-router.post('/content', authenticateCookie, async (req, res) => {
+router.post('/create', authenticateCookie, async (req, res) => {
     try {
         const { type, idToReport, userMessage } = req.body;
 
@@ -49,8 +49,12 @@ router.post('/process', authenticateCookie, async (req, res) => {
     }
 });
 
-router.get('/all/:pageNumber?', async (req, res) => {
+router.get('/all/:pageNumber?', authenticateCookie, async (req, res) => {
     try {
+        if(!req.user.isAdmin) {
+            return res.status(401).json({ message: "only admins can view reports!" });
+        }
+
         const { pageNumber } = req.params;
 
         const reports = await getReports(
