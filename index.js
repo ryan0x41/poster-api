@@ -5,9 +5,17 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 
-const express = require('express')
+const express = require('express');
+const session = require('express-session');
 const app = express()
 const port = 3000
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'nci',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false }
+}));
 
 const userRouter = require('./routes/user')
 const postRouter = require('./routes/post')
@@ -17,6 +25,7 @@ const conversationRouter = require('./routes/conversation')
 const messageRouter = require('./routes/message')
 const reportRouter = require('./routes/report')
 const notificationRouter = require('./routes/notification')
+const spotifyRouter = require('./routes/spotify')
 
 app.use(cookieParser());
 // middleware to parse json
@@ -32,6 +41,7 @@ app.use('/conversation', conversationRouter);
 app.use('/message', messageRouter);
 app.use('/report', reportRouter);
 app.use('/notification', notificationRouter);
+app.use('/spotify', spotifyRouter);
 
 // ejs
 app.engine('ejs', engine);
