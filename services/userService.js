@@ -72,6 +72,9 @@ async function createUser(username, email, password) {
         username,
         email,
         passwordHash,
+        spotifyId,
+        spotifyAccessToken,
+        spotifyRefreshToken,
         accountCreation: Date.now(),
         following: [],
         isAdmin: false
@@ -299,6 +302,20 @@ async function followUser(userId, userIdToFollow) {
     }
 }
 
+// allow account to be linked to spotify
+async function linkSpotify(spotifyAccount) {
+    const db = await connectDB();
+    const usersCollection = db.collection('users');
+    const spotifyCollection = db.collection('spotifyAccounts');
+  
+    const user = await usersCollection.findOne({ id: spotifyAccount.userId });
+    if (!user) {
+      throw new Error('User not found!');
+    }
+  
+    const result = await spotifyCollection.insertOne(spotifyAccount);
+    return result;
+}
 
 // edit a users email or username by userId
 async function editUser(newUsername, newEmail, userId) {
@@ -393,4 +410,5 @@ module.exports = { getFollowers,
                    updateProfileImageUrl,
                    getUserProfile,
                    getUserFeed,
-                   promote };
+                   promote,
+                   linkSpotify };
