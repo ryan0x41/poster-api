@@ -11,7 +11,12 @@ const spotifyApi = new SpotifyWebApi({
 });
 
 const getSpotifyAuthUrl = (req, res) => {
-	const scopes = ['user-top-read', 'user-read-recently-played']; // permissions for spotify, change if needed
+	const scopes = [
+					'user-top-read',
+				    'user-read-recently-played',
+				    'user-read-currently-playing',
+					'user-read-playback-state',
+				   ];	// permissions for spotify, change if needed
 
 	// csrf stuff i read up on
 	const state = crypto.randomBytes(16).toString('hex');
@@ -19,7 +24,8 @@ const getSpotifyAuthUrl = (req, res) => {
 
 	const authorizeURL = spotifyApi.createAuthorizeURL(scopes, state);
 
-	res.status(200).json({ message: "success", authorizeURL });
+	res.redirect(authorizeURL);
+	//res.status(200).json({ message: "success", authorizeURL });
 };
 
 const spotifyCallback = async (req, res) => {
@@ -63,7 +69,7 @@ async function getSpotifyTopArtists(userId) {
 	spotifyApi.setAccessToken(accessToken);
 
 	const topArtistsData = await spotifyApi.getMyTopArtists({ limit: 10 });
-	return topArtistsData.body.items;
+	return { artists: topArtistsData.body.items };
 }
 
 async function getSpotifyTopTracks(userId) {
@@ -71,33 +77,67 @@ async function getSpotifyTopTracks(userId) {
 	spotifyApi.setAccessToken(accessToken);
 
 	const topTracksData = await spotifyApi.getMyRecentlyPlayedTracks({ limit: 10 });
-
+	console.log(topTracksData);
 	// mannnn spotify had some really ugly json 
-	const cleanedTracks = topTracksData.body.items.map(item => {
-		const { track, played_at } = item;
-		return {
-		played_at,
+	const tracks = await cleanTracks(topTracksData);
+
+	return { tracks };
+}
+
+async function cleanTracks(tracksData) {
+	if (!tracksData || !tracksData.body) {
+		console.error("Invalid tracksData structure:", tracksData);
+		return [];
+	}
+
+	if (Array.isArray(tracksData.body.items)) {
+		return tracksData.body.items.map(item => {
+			if (!item.track) return null;
+
+			return formatTrack(item.track, item.played_at);
+		}).filter(Boolean);
+	} else if (tracksData.body.item) {
+		return [formatTrack(tracksData.body.item, tracksData.body.timestamp)];
+	}
+
+	console.error("Unexpected tracksData format:", tracksData);
+	return [];
+}
+
+function formatTrack(track, played_at) {
+	return {
+		played_at: played_at || null,
 		track: {
 			id: track.id,
 			name: track.name,
-			url: track.external_urls.spotify,
+			url: track.external_urls?.spotify || null,
 			album: {
-				id: track.album.id,
-				name: track.album.name,
-				// the first image
-				image: track.album.images && track.album.images[0] ? track.album.images[0].url : null,
-				url: track.album.external_urls.spotify,
+				id: track.album?.id || null,
+				name: track.album?.name || "unknown album",
+				image: track.album?.images?.[0]?.url || null,
+				url: track.album?.external_urls?.spotify || null,
 			},
-			artists: track.artists.map(artist => ({
+			artists: track.artists?.map(artist => ({
 				id: artist.id,
 				name: artist.name,
-				url: artist.external_urls.spotify,
-			})),
+				url: artist.external_urls?.spotify || null,
+			})) || [],
 		},
-		};
-	});
+	};
+}
+
+async function getCurrentlyPlaying(userId) {
+	const { accessToken } = await getSpotifyAccessToken(userId);
+	spotifyApi.setAccessToken(accessToken);
 	
-	return cleanedTracks;
+	const currentlyPlaying = await spotifyApi.getMyCurrentPlaybackState();
+	if (!currentlyPlaying.body || !currentlyPlaying.body.item) {
+		return { message: "no track currently playing", tracks: [] };
+	}
+
+	const tracks = await cleanTracks(currentlyPlaying);
+
+	return { tracks };
 }
 
 async function getSpotifyTopData(userId) {
@@ -108,8 +148,8 @@ async function getSpotifyTopData(userId) {
 	const topTracksData = await getSpotifyTopTracks(userId);
 	
 	return {
-		topArtists: topArtistsData.body.items,
-		topTracks: topTracksData,
+		artists: topArtistsData.body.items,
+		tracks: topTracksData,
 	};
 }
 
@@ -119,4 +159,5 @@ module.exports = {
 	getSpotifyTopData,
 	getSpotifyTopArtists,
 	getSpotifyTopTracks,
+	getCurrentlyPlaying,
 };
