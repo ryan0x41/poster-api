@@ -28,6 +28,7 @@ const notificationRouter = require('./routes/notification')
 const spotifyRouter = require('./routes/spotify')
 
 app.use(cookieParser());
+
 // middleware to parse json
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -42,7 +43,6 @@ app.use('/message', messageRouter);
 app.use('/report', reportRouter);
 app.use('/notification', notificationRouter);
 app.use('/spotify', spotifyRouter);
-
 // ejs
 app.engine('ejs', engine);
 app.set('view engine', 'ejs');

@@ -1,4 +1,12 @@
 const { connectDB } = require('./db')
+const SpotifyWebApi = require('spotify-web-api-node');
+
+const spotifyApi = new SpotifyWebApi({
+	clientId: process.env.SPOTIFY_CLIENT_ID,
+	clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
+	redirectUri: process.env.SPOTIFY_REDIRECT_URI || "http://localhost:3000/spotify/callback",
+});
+
 // get spotify access token and refresh it if expired
 async function getSpotifyAccessToken(userId) {
     const db = await connectDB();

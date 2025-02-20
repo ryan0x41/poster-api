@@ -6,6 +6,7 @@ const {
     getSpotifyTopData,
     getSpotifyTopArtists,
     getSpotifyTopTracks,
+    getCurrentlyPlaying,
 } = require('../controllers/spotifyController');
 const authenticateCookie = require('../middleware/authenticateCookie');
 
@@ -38,6 +39,19 @@ router.get('/top/:option?/:userId?', authenticateCookie, async (req, res, next) 
         } else {
             data = await getSpotifyTopData(userId);
         }
+
+        res.status(200).json(data);
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.get('/playing/:userId?', authenticateCookie, async (req, res, next) => {
+    try {
+        let { userId } = req.params;
+        userId = userId || req.user.id;
+
+        const data = await getCurrentlyPlaying(userId);
 
         res.status(200).json(data);
     } catch (error) {
