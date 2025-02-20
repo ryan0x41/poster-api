@@ -24,8 +24,8 @@ const getSpotifyAuthUrl = (req, res) => {
 
 	const authorizeURL = spotifyApi.createAuthorizeURL(scopes, state);
 
-	res.redirect(authorizeURL);
-	//res.status(200).json({ message: "success", authorizeURL });
+	//res.redirect(authorizeURL);
+	res.status(200).json({ message: "success", authorizeURL });
 };
 
 const spotifyCallback = async (req, res) => {
