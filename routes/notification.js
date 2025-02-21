@@ -4,9 +4,9 @@ const router = express.Router();
 const { readNotification, deleteNotification, createNotification, getNotifications, getNotification } = require('../services/notificationService');
 const { Notification } = require('../models/Notification');
 
-const authenticateCookie = require('../middleware/authenticateCookie');
+const authenticateAuthHeader = require('../middleware/authenticateAuthHeader');
 
-router.get('/:notificationId', authenticateCookie, async (req, res) => {
+router.get('/:notificationId', authenticateAuthHeader, async (req, res) => {
     try {
         const notificationId = req.params.notificationId;
         const { message, notification } = await getNotification(req.user.id, notificationId);
@@ -18,7 +18,7 @@ router.get('/:notificationId', authenticateCookie, async (req, res) => {
     }
 });
 
-router.get('/all/:pageNumber?', authenticateCookie, async (req, res) => {
+router.get('/all/:pageNumber?', authenticateAuthHeader, async (req, res) => {
     try {
         const { pageNumber } = req.params;
 
@@ -35,7 +35,7 @@ router.get('/all/:pageNumber?', authenticateCookie, async (req, res) => {
     }
 });
 
-router.patch('/read/:notificationId', authenticateCookie, async (req, res) => {
+router.patch('/read/:notificationId', authenticateAuthHeader, async (req, res) => {
     try {
         const notificationId = req.params.notificationId;
         const { message } = await readNotification(req.user.id, notificationId);
@@ -47,7 +47,7 @@ router.patch('/read/:notificationId', authenticateCookie, async (req, res) => {
     }
 });
 
-router.patch('/delete/:notificationId', authenticateCookie, async (req, res) => {
+router.patch('/delete/:notificationId', authenticateAuthHeader, async (req, res) => {
     try {
         const notificationId = req.params.notificationId;
         const { message } = await deleteNotification(req.user.id, notificationId);

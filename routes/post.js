@@ -5,9 +5,9 @@ const { deletePost, createPost, getAuthorPosts, getPostWithComments, toggleLikeO
 
 const Post = require('../models/Post');
 
-const authenticateCookie = require('../middleware/authenticateCookie');
+const authenticateAuthHeader = require('../middleware/authenticateAuthHeader');
 
-router.post('/create', authenticateCookie, async (req, res) => {
+router.post('/create', authenticateAuthHeader, async (req, res) => {
     try {
         // post author should be logged in user
         const postData = {
@@ -30,7 +30,7 @@ router.post('/create', authenticateCookie, async (req, res) => {
     }
 });
 
-router.delete('/delete/:postId', authenticateCookie, async (req, res) => {
+router.delete('/delete/:postId', authenticateAuthHeader, async (req, res) => {
     try {
         const { message } = await deletePost(req.user.id, req.params.postId);
         res.status(200).json({ message });
@@ -40,7 +40,7 @@ router.delete('/delete/:postId', authenticateCookie, async (req, res) => {
     }
 });
 
-router.post('/like', authenticateCookie, async (req, res) => {
+router.post('/like', authenticateAuthHeader, async (req, res) => {
     try {
         const { postId } = req.body;
         const authorId = req.user.id;

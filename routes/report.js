@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const authenticateCookie = require('../middleware/authenticateCookie');
+const authenticateAuthHeader = require('../middleware/authenticateAuthHeader');
 const { Report, ContentType } = require('../models/Report')
 
 const { createReport, getReports, processReport } = require('../services/reportService')
 
-router.post('/create', authenticateCookie, async (req, res) => {
+router.post('/create', authenticateAuthHeader, async (req, res) => {
     try {
         const { type, idToReport, userMessage } = req.body;
 
@@ -33,7 +33,7 @@ router.post('/create', authenticateCookie, async (req, res) => {
     }
 });
 
-router.post('/process', authenticateCookie, async (req, res) => {
+router.post('/process', authenticateAuthHeader, async (req, res) => {
     try {
         if(!req.user.isAdmin) {
             return res.status(401).json({ message: "only admins can process reports!" });
@@ -49,7 +49,7 @@ router.post('/process', authenticateCookie, async (req, res) => {
     }
 });
 
-router.get('/all/:pageNumber?', authenticateCookie, async (req, res) => {
+router.get('/all/:pageNumber?', authenticateAuthHeader, async (req, res) => {
     try {
         if(!req.user.isAdmin) {
             return res.status(401).json({ message: "only admins can view reports!" });

@@ -1,5 +1,5 @@
 const express = require('express');
-const authenticateCookie = require('../middleware/authenticateCookie');
+const authenticateAuthHeader = require('../middleware/authenticateAuthHeader');
 const router = express.Router();
 const { sendMessage, getMessageThread } = require('../services/messageService');
 const { Message } = require('../models/Message');
@@ -8,7 +8,7 @@ const { getConversation } = require('../services/conversationService');
 const { createNotification } = require('../services/notificationService');
 const { Notification, NotificationType } = require('../models/Notification');
 
-router.post('/send', authenticateCookie, async (req, res) => {
+router.post('/send', authenticateAuthHeader, async (req, res) => {
     try {
         const { conversationId, content } = req.body;
         const sender = req.user.id;
@@ -38,7 +38,7 @@ router.post('/send', authenticateCookie, async (req, res) => {
     }
 });
 
-router.get('/thread/:conversationId', authenticateCookie, async (req, res) => {
+router.get('/thread/:conversationId', authenticateAuthHeader, async (req, res) => {
     try {
         const conversationId = req.params.conversationId;
         const messages = await getMessageThread(conversationId, req.user.id);

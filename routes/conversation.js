@@ -1,10 +1,10 @@
 const express = require('express');
-const authenticateCookie = require('../middleware/authenticateCookie');
+const authenticateAuthHeader = require('../middleware/authenticateAuthHeader');
 const router = express.Router();
 const { Conversation } = require('../models/Conversation');
 const { startConversation, getConversations, getConversation } = require('../services/conversationService');
 
-router.post('/create', authenticateCookie, async (req, res) => {
+router.post('/create', authenticateAuthHeader, async (req, res) => {
     try {
         const { participants } = req.body;
         const sender = req.user.id;
@@ -26,7 +26,7 @@ router.post('/create', authenticateCookie, async (req, res) => {
     }
 });
 
-router.get('/:conversationId', authenticateCookie, async (req, res) => {
+router.get('/:conversationId', authenticateAuthHeader, async (req, res) => {
     try {
         const conversationId = req.params.conversationId;
         const { message, conversation } = await getConversation(conversationId);
@@ -38,7 +38,7 @@ router.get('/:conversationId', authenticateCookie, async (req, res) => {
     }
 });
 
-router.get('/all', authenticateCookie, async (req, res) => {
+router.get('/all', authenticateAuthHeader, async (req, res) => {
     try {
         const { conversations, message } = await getConversations(req.user.id);
         res.status(200).json({ message, conversations });

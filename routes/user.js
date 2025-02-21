@@ -25,7 +25,7 @@ const { getFollowers,
         promote } = require('../services/userService');
 
 // security reasons, dont allow users to delete other user accounts and what not
-const authenticateCookie = require('../middleware/authenticateCookie');
+const authenticateAuthHeader = require('../middleware/authenticateAuthHeader');
 
 router.post('/register', async (req, res) => {
     const { username, email, password } = req.body;
@@ -47,7 +47,7 @@ router.post('/register', async (req, res) => {
     }
 });
 
-router.post('/promote', authenticateCookie, async (req, res) => {
+router.post('/promote', authenticateAuthHeader, async (req, res) => {
     try {
         if(!req.user.isAdmin) {
             res.status(401).json({ message: "you have to be admin to promote a user to admin!" });
@@ -81,7 +81,7 @@ router.post('/login', async (req, res) => {
     }    
 });
 
-router.post('/reset-password', authenticateCookie, async (req, res) => {
+router.post('/reset-password', authenticateAuthHeader, async (req, res) => {
     try {
         const { oldPassword, newPassword } = req.body;
         const { message } = await resetPassword(oldPassword, newPassword, req.user.id);
@@ -93,7 +93,7 @@ router.post('/reset-password', authenticateCookie, async (req, res) => {
     }
 });
 
-router.post('/update-info', authenticateCookie, async (req, res) => {
+router.post('/update-info', authenticateAuthHeader, async (req, res) => {
     try {
         const { newEmail, newUsername } = req.body;
         const { message, token } = await editUser(newUsername, newEmail, req.user.id);
@@ -117,7 +117,7 @@ router.get('/profile/:username', async (req, res) => {
     }
 });
 
-router.post('/profile-image', authenticateCookie, upload.single("image"), async (req, res) => {
+router.post('/profile-image', authenticateAuthHeader, upload.single("image"), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ error: "no file uploaded" });
@@ -133,7 +133,7 @@ router.post('/profile-image', authenticateCookie, upload.single("image"), async 
     }
 });
 
-router.post('/follow', authenticateCookie, async (req, res) => {
+router.post('/follow', authenticateAuthHeader, async (req, res) => {
     try {
         const { userIdToFollow } = req.body;
         const { message } = await followUser(req.user.id, userIdToFollow);
@@ -155,7 +155,7 @@ router.post('/follow', authenticateCookie, async (req, res) => {
     }
 });
 
-router.get('/feed/:page', authenticateCookie, async (req, res) => {
+router.get('/feed/:page', authenticateAuthHeader, async (req, res) => {
     try {
         const { message, posts, page } = await getUserFeed(req.user.id, req.params.page);
 
@@ -190,7 +190,7 @@ router.get('/followers/:userId', async (req, res) => {
     }
 });
 
-router.post('/delete-account', authenticateCookie, async (req, res) => {
+router.post('/delete-account', authenticateAuthHeader, async (req, res) => {
     const { userId, usernameOrEmail, password } = req.body;
 
     // validate against auth user

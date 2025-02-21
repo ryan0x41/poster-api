@@ -1,12 +1,13 @@
 const jwt = require('jsonwebtoken');
 
-function authenticateCookie(req, res, next) {
-    // extract token from cookie
-    const token = req.cookies.authToken;
-
+function authenticateAuthHeader(req, res, next) {
+    let token = req.headers.authorization;
+	if (token && token.startsWith("Bearer ")) {
+		token = token.slice(7).trim();
+	}
     // i should do oneliners more often
     if (!token) { 
-        const error = new Error('no authentication token provided')
+        const error = new Error('no authentication header provided')
         error.status = 401;
         return next(error);
     }
@@ -23,4 +24,4 @@ function authenticateCookie(req, res, next) {
     });
 }
 
-module.exports = authenticateCookie;
+module.exports = authenticateAuthHeader;
