@@ -7,6 +7,10 @@ const cors = require('cors');
 
 const express = require('express');
 const session = require('express-session');
+
+const processInfo = require('process');
+const os = require('os');
+
 const app = express()
 const port = 3000
 
@@ -27,6 +31,8 @@ const reportRouter = require('./routes/report')
 const notificationRouter = require('./routes/notification')
 const spotifyRouter = require('./routes/spotify')
 
+const startTime = Date.now();
+
 app.use(cookieParser());
 
 // middleware to parse json
@@ -43,6 +49,19 @@ app.use('/message', messageRouter);
 app.use('/report', reportRouter);
 app.use('/notification', notificationRouter);
 app.use('/spotify', spotifyRouter);
+
+const routes = [
+  { path: "/user", description: "user related operations" },
+  { path: "/post", description: "manage posts" },
+  { path: "/comment", description: "manage comments" },
+  { path: "/upload", description: "handle file uploads" },
+  { path: "/conversation", description: "conversations between users" },
+  { path: "/message", description: "user messages" },
+  { path: "/report", description: "admin report handling" },
+  { path: "/notification", description: "user notifications" },
+  { path: "/spotify", description: "spotify api integration" }
+];
+
 // ejs
 app.engine('ejs', engine);
 app.set('view engine', 'ejs');
@@ -54,8 +73,22 @@ app.use('/public', express.static(path.join(__dirname, 'public')));
 app.set('views', path.join(__dirname, 'views'));
 
 app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
+  const uptime = processInfo.uptime();
+  const systemInfo = {
+    server: {
+      hostname: os.hostname(),
+      platform: os.platform(),
+      arch: os.arch(),
+      node_version: processInfo.version,
+      memory_usage: `${(processInfo.memoryUsage().rss / 1024 / 1024).toFixed(2)} MB`,
+      uptime: `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m ${Math.floor(uptime % 60)}s`,
+      start_time: new Date(startTime).toLocaleString(),
+    },
+    available_routes: routes
+  };
+
+  res.json(systemInfo);
+});
 
 app.use((err, req, res, next) => {
     console.error(err.stack);
