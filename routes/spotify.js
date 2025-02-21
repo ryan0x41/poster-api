@@ -46,7 +46,7 @@ router.get('/top/:option?/:userId?', authenticateAuthHeader, async (req, res, ne
     }
 });
 
-router.get('/playing/:userId?', authenticateCookie, async (req, res, next) => {
+router.get('/playing/:userId?', authenticateAuthHeader, async (req, res, next) => {
     try {
         let { userId } = req.params;
         userId = userId || req.user.id;
