@@ -72,12 +72,10 @@ async function createUser(username, email, password) {
         username,
         email,
         passwordHash,
-        spotifyId,
-        spotifyAccessToken,
-        spotifyRefreshToken,
         accountCreation: Date.now(),
         following: [],
-        isAdmin: false
+        isAdmin: false,
+        spotifyLinked: false,
     };
 
     // insert into mongodb users collection
@@ -310,11 +308,28 @@ async function linkSpotify(spotifyAccount) {
   
     const user = await usersCollection.findOne({ id: spotifyAccount.userId });
     if (!user) {
-      throw new Error('User not found!');
+      throw new Error('user not found!');
+    }
+
+    const existingSpotify = await spotifyCollection.findOne({ userId: user.id });
+    if(existingSpotify) {
+        throw new Error('account already linked');
     }
   
-    const result = await spotifyCollection.insertOne(spotifyAccount);
-    return result;
+    const insertResult = await spotifyCollection.insertOne(spotifyAccount);
+    if(!insertResult.acknowledged) {
+        throw new Error('error inserting spotifyAccount into database');
+    }
+
+    const updateResult = await usersCollection.updateOne(
+        { id: user.id },
+        { $set: { spotifyLinked: true } }
+    );
+    if (updateResult.matchedCount === 0) {
+        throw new Error('failed to update user');
+    }
+
+    return insertResult;
 }
 
 // edit a users email or username by userId
