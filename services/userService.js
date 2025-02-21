@@ -72,12 +72,10 @@ async function createUser(username, email, password) {
         username,
         email,
         passwordHash,
-        spotifyId,
-        spotifyAccessToken,
-        spotifyRefreshToken,
         accountCreation: Date.now(),
         following: [],
-        isAdmin: false
+        isAdmin: false,
+        spotifyLinked: false,
     };
 
     // insert into mongodb users collection
