@@ -21,6 +21,7 @@ const { getFollowers,
         resetPassword,
         updateProfileImageUrl,
         getUserProfile,
+        getUserProfileById,
         getUserFeed,
         promote } = require('../services/userService');
 
@@ -107,15 +108,26 @@ router.post('/update-info', authenticateAuthHeader, async (req, res) => {
 
 router.get('/profile/:username', async (req, res) => {
     try {
-        const username = req.params.username;
-        const { message, user } = await getUserProfile(username);
-
-        res.status(200).json({ message: message, user})
+      const username = req.params.username;
+      const { message, user, posts, listeningHistory, favouriteArtists } = await getUserProfile(username);
+      res.status(200).json({ message, user, posts, listeningHistory, favouriteArtists });
     } catch (error) {
-        console.error(error);
-        res.status(401).json({ error: error.message });
+      console.error(error);
+      res.status(401).json({ error: error.message });
     }
-});
+  });
+  
+  router.get('/profile/id/:userId', async (req, res) => {
+    try {
+      const userId = req.params.userId;
+      const { message, user, posts, listeningHistory, favouriteArtists } = await getUserProfileById(userId);
+      res.status(200).json({ message, user, posts, listeningHistory, favouriteArtists });
+    } catch (error) {
+      console.error(error);
+      res.status(401).json({ error: error.message });
+    }
+  });
+  
 
 router.post('/profile-image', authenticateAuthHeader, upload.single("image"), async (req, res) => {
     try {

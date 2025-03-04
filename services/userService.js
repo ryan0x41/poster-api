@@ -3,6 +3,8 @@ const { connectDB } = require('./db')
 const bcrypt = require('bcrypt');
 // for creating a session when logged in
 const jwt = require('jsonwebtoken');
+// for full profile retrieval
+const { getSpotifyTopArtists, getSpotifyTopTracks } = require('../controllers/spotifyController');
 
 // dont crash on me now!
 if (!process.env.JWT_SECRET) {
@@ -197,17 +199,124 @@ async function loginUser(usernameOrEmail, password) {
     return { token, user: { id: user.id, username: user.username, email: user.email, passwordHash: user.passwordHash } };
 }
 
-// get a user profile (general information) by username
+// get a user profile (full information) by username
 async function getUserProfile(username) {
     const db = await connectDB();
     const usersCollection = db.collection('users');
+    const postsCollection = db.collection('post');
 
-    const user = await usersCollection.findOne({ username: username });
-    if(!user) {
+    const user = await usersCollection.findOne({ username });
+    if (!user) {
         throw new Error('user not found!');
     }
-    
-    return { message: "retrieved user successfully", user: { id: user.id, username: user.username, email: user.email, profileImageUrl: user.profileImageUrl, accountCreation: user.accountCreation }}
+
+    const posts = await postsCollection
+        .find({ author: user.id }, { projection: { _id: 0 } })
+        .toArray();
+
+    const followers = await usersCollection
+        .find({ following: user.id }, { projection: { _id: 0, email: 0, passwordHash: 0, following: 0, warnings: 0, isAdmin: 0 } })
+        .toArray();
+
+    const following = user.following && user.following.length > 0 ?
+        await usersCollection
+            .find({ id: { $in: user.following } }, { projection: { _id: 0, id: 1, username: 1, accountCreation: 1 } })
+            .toArray() :
+        [];
+
+    const spotifyTracksResponse = await getSpotifyTopTracks(user.id);
+    const tracks = Array.isArray(spotifyTracksResponse.tracks) ? spotifyTracksResponse.tracks : [];
+    const listeningHistory = tracks.map(item => {
+        const track = item.track;
+        return {
+            albumCover: track.album && track.album.image ? track.album.image : '/default-album-cover.jpg',
+            artistName: track.artists && track.artists[0] ? track.artists[0].name : 'Unknown Artist',
+            songName: track.name
+        };
+    });
+
+    const spotifyArtistsResponse = await getSpotifyTopArtists(user.id);
+    const artists = Array.isArray(spotifyArtistsResponse.artists) ? spotifyArtistsResponse.artists : [];
+    const favouriteArtists = artists.map(artist => ({
+        imageUrl: artist.images && artist.images[0] ? artist.images[0].url : '/default-artist.jpg',
+        name: artist.name
+    }));
+
+    return {
+        message: "retrieved user successfully",
+        user: {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            profileImageUrl: user.profileImageUrl,
+            accountCreation: user.accountCreation,
+            followers,
+            following,
+            posts,
+            listeningHistory,
+            favouriteArtists
+        }
+    };
+}
+
+// get user profile given a userId
+async function getUserProfileById(userId) {
+    const db = await connectDB();
+    const usersCollection = db.collection('users');
+    const postsCollection = db.collection('post');
+
+    const user = await usersCollection.findOne({ id: userId });
+    if (!user) {
+        throw new Error('user not found!');
+    }
+
+    const posts = await postsCollection
+        .find({ author: userId }, { projection: { _id: 0 } })
+        .toArray();
+
+    const followers = await usersCollection
+        .find({ following: userId }, { projection: { _id: 0, email: 0, passwordHash: 0, following: 0, warnings: 0, isAdmin: 0 } })
+        .toArray();
+
+    const following = user.following && user.following.length > 0 ?
+        await usersCollection
+            .find({ id: { $in: user.following } }, { projection: { _id: 0, id: 1, username: 1, accountCreation: 1 } })
+            .toArray() :
+        [];
+
+    const spotifyTracksResponse = await getSpotifyTopTracks(user.id);
+    const tracks = Array.isArray(spotifyTracksResponse.tracks) ? spotifyTracksResponse.tracks : [];
+    const listeningHistory = tracks.map(item => {
+        const track = item.track;
+        return {
+            albumCover: track.album && track.album.image ? track.album.image : '/default-album-cover.jpg',
+            artistName: track.artists && track.artists[0] ? track.artists[0].name : 'Unknown Artist',
+            songName: track.name
+        };
+    });
+
+    const spotifyArtistsResponse = await getSpotifyTopArtists(user.id);
+    const artists = Array.isArray(spotifyArtistsResponse.artists) ? spotifyArtistsResponse.artists : [];
+    const favouriteArtists = artists.map(artist => ({
+        imageUrl: artist.images && artist.images[0] ? artist.images[0].url : '/default-artist.jpg',
+        name: artist.name
+    }));
+
+    return {
+        message: "retrieved user successfully",
+        user: {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            profileImageUrl: user.profileImageUrl,
+            accountCreation: user.accountCreation,
+            followers,
+            following,
+            posts,
+            listeningHistory,
+            favouriteArtists
+        }
+    };
 }
 
 // reset a password using oldPassword and userId
@@ -424,6 +533,7 @@ module.exports = { getFollowers,
                    resetPassword,
                    updateProfileImageUrl,
                    getUserProfile,
+                   getUserProfileById,
                    getUserFeed,
                    promote,
                    linkSpotify };

@@ -65,23 +65,33 @@ const spotifyCallback = async (req, res) => {
 };
 
 async function getSpotifyTopArtists(userId) {
-	const { accessToken } = await getSpotifyAccessToken(userId);
-	spotifyApi.setAccessToken(accessToken);
+	try {
+		const { accessToken } = await getSpotifyAccessToken(userId);
+		spotifyApi.setAccessToken(accessToken);
 
-	const topArtistsData = await spotifyApi.getMyTopArtists({ limit: 10 });
-	return { artists: topArtistsData.body.items };
+		const topArtistsData = await spotifyApi.getMyTopArtists({ limit: 10 });
+		return { artists: topArtistsData.body.items };
+	} catch(error) {
+		console.error(error.message);
+		return { artists: [] };
+	}
 }
 
 async function getSpotifyTopTracks(userId) {
-	const { accessToken } = await getSpotifyAccessToken(userId);
-	spotifyApi.setAccessToken(accessToken);
+	try {
+		const { accessToken } = await getSpotifyAccessToken(userId);
+		spotifyApi.setAccessToken(accessToken);
 
-	const topTracksData = await spotifyApi.getMyRecentlyPlayedTracks({ limit: 10 });
-	console.log(topTracksData);
-	// mannnn spotify had some really ugly json 
-	const tracks = await cleanTracks(topTracksData);
+		const topTracksData = await spotifyApi.getMyRecentlyPlayedTracks({ limit: 10 });
+		console.log(topTracksData);
+		// mannnn spotify had some really ugly json 
+		const tracks = await cleanTracks(topTracksData);
 
-	return { tracks };
+		return { tracks };
+	} catch (error) {
+		console.error(error.message);
+		return { artists: [] };
+	}
 }
 
 async function cleanTracks(tracksData) {
