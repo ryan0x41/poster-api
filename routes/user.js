@@ -68,6 +68,14 @@ router.post('/promote', authenticateAuthHeader, async (req, res) => {
 router.get('/auth', authenticateAuthHeader, async (req, res) => {
     try {
         const { message, user } = await auth(req.user.id);
+
+        res.cookie('user', Buffer.from(JSON.stringify(user)).toString('base64'), {
+            // secure: true, // TODO: change on deploy
+            secure: false,
+            sameSite: 'Strict',
+            maxAge: 24 * 60 * 60 * 1000
+        });
+
         res.status(200).json({ message, user });
     } catch(error) {
         console.error(error);
@@ -85,12 +93,26 @@ router.post('/login', async (req, res) => {
 
     try {
         // status 201 is creation successful
-        const { token } = await loginUser(usernameOrEmail, password );
+        const { token } = await loginUser(usernameOrEmail, password);
+
+        res.cookie('authToken', token, {
+            // secure: true, // TODO: change on deploy
+            httpOnly: true,
+            secure: false,
+            sameSite: 'Strict'
+        });
+
         res.status(201).json({ message: 'user logged in successfully', token: token });
     } catch (error) {
         console.error(error);
         res.status(400).json({ error: error.message });
     }    
+});
+
+router.post('/logout', (req, res) => {
+    res.clearCookie('authToken');
+    res.clearCookie('user');
+    res.status(200).json({ message: 'logged out successfully' });
 });
 
 router.post('/reset-password', authenticateAuthHeader, async (req, res) => {
