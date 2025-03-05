@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 // for creating a session when logged in
 const jwt = require('jsonwebtoken');
 // for full profile retrieval
-const { getSpotifyTopArtists, getSpotifyTopTracks } = require('../controllers/spotifyController');
+const { getSpotifyTopArtists, getSpotifyTopTracks, getCurrentlyPlaying } = require('../controllers/spotifyController');
 
 // dont crash on me now!
 if (!process.env.JWT_SECRET) {
@@ -255,6 +255,17 @@ async function getUserProfile(username) {
         name: artist.name
     }));
 
+    const spotifyCurrentlyPlaying = await getCurrentlyPlaying(user.id);
+    const currentlyPlaying = spotifyCurrentlyPlaying.tracks.length > 0
+        ? {
+            name: spotifyCurrentlyPlaying.tracks[0].track.name,
+            artists: spotifyCurrentlyPlaying.tracks[0].track.artists.map(artist => artist.name)
+        }
+        : null;
+
+
+
+
     return {
         message: "retrieved user successfully",
         user: {
@@ -267,7 +278,8 @@ async function getUserProfile(username) {
             following,
             posts,
             listeningHistory,
-            favouriteArtists
+            favouriteArtists,
+            currentlyPlaying
         }
     };
 }

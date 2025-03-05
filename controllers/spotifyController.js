@@ -115,6 +115,7 @@ async function cleanTracks(tracksData) {
 }
 
 function formatTrack(track, played_at) {
+	console.log(track.album.images)
 	return {
 		played_at: played_at || null,
 		track: {
@@ -124,7 +125,7 @@ function formatTrack(track, played_at) {
 			album: {
 				id: track.album?.id || null,
 				name: track.album?.name || "unknown album",
-				image: track.album?.images?.[0]?.url || null,
+				image: track.album?.images?.[2]?.url || null,
 				url: track.album?.external_urls?.spotify || null,
 			},
 			artists: track.artists?.map(artist => ({
@@ -137,17 +138,22 @@ function formatTrack(track, played_at) {
 }
 
 async function getCurrentlyPlaying(userId) {
-	const { accessToken } = await getSpotifyAccessToken(userId);
-	spotifyApi.setAccessToken(accessToken);
-	
-	const currentlyPlaying = await spotifyApi.getMyCurrentPlaybackState();
-	if (!currentlyPlaying.body || !currentlyPlaying.body.item) {
-		return { message: "no track currently playing", tracks: [] };
+	try {
+		const { accessToken } = await getSpotifyAccessToken(userId);
+		spotifyApi.setAccessToken(accessToken);
+		
+		const currentlyPlaying = await spotifyApi.getMyCurrentPlaybackState();
+		if (!currentlyPlaying.body || !currentlyPlaying.body.item) {
+			return { message: "no track currently playing", tracks: [] };
+		}
+
+		const tracks = await cleanTracks(currentlyPlaying);
+
+		return { tracks };
+	} catch (error) {
+		console.error({ error: error.message });
+		return { tracks: [] };
 	}
-
-	const tracks = await cleanTracks(currentlyPlaying);
-
-	return { tracks };
 }
 
 async function getSpotifyTopData(userId) {
