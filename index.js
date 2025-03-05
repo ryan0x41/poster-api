@@ -11,7 +11,15 @@ const session = require('express-session');
 const processInfo = require('process');
 const os = require('os');
 
-const app = express()
+const app = express();
+
+app.use(cors({
+  origin: process.env.WEB_URL || 'http://localhost:4000',
+  credentials: true, 
+  methods: 'GET,POST,PUT,DELETE,OPTIONS',
+  allowedHeaders: 'Content-Type,Authorization'
+}));
+
 const port = 3000
 
 app.use(session({
@@ -38,7 +46,6 @@ app.use(cookieParser());
 // middleware to parse json
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
 
 app.use('/user', userRouter);
 app.use('/post', postRouter);
