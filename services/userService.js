@@ -14,7 +14,7 @@ if (!process.env.JWT_SECRET) {
 }
 
 // for creating unique user identification numbers
-const { 
+const {
     v4: uuidv4,
 } = require('uuid');
 
@@ -26,7 +26,7 @@ function validateRegistration(username, email, password) {
     // SOURCE: https://stackoverflow.com/questions/201323/how-can-i-validate-an-email-address-using-a-regular-expression
     const emailRegex = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)])/;
 
-    if(!email.match(emailRegex)) {
+    if (!email.match(emailRegex)) {
         throw new Error('invalid email!');
     }
 
@@ -34,14 +34,14 @@ function validateRegistration(username, email, password) {
     // lowercase, alphanumeric, atleast 4 characters, and can contain - and _
     const usernameRegex = /^[a-z0-9_-]{4,}$/
 
-    if(!username.match(usernameRegex)) {
+    if (!username.match(usernameRegex)) {
         throw new Error('invalid username!');
     }
 
     // SOURCE ORIG: https://stackoverflow.com/questions/19605150/regex-for-password-must-contain-at-least-eight-characters-at-least-one-number-a
     const passwordRegex = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/;
 
-    if(!password.match(passwordRegex)) {
+    if (!password.match(passwordRegex)) {
         throw new Error('invalid password!');
     }
 }
@@ -107,7 +107,7 @@ async function promote(userId) {
 async function getUserFeed(userId, page) {
     const db = await connectDB();
     const usersCollection = db.collection('users');
-    const postsCollection = db.collection('post'); 
+    const postsCollection = db.collection('post');
 
     const user = await usersCollection.findOne({ id: userId });
     if (!user) {
@@ -126,7 +126,7 @@ async function getUserFeed(userId, page) {
         .skip(skipCount)
         .limit(postsPerPage)
         .toArray();
-    
+
 
     return { message: "user feed retrieved successfully", posts: feedPosts, page: pageNumber };
 }
@@ -150,7 +150,7 @@ async function getFollowing(userId) {
     const usersCollection = db.collection('users');
 
     const user = await usersCollection.findOne({ id: userId });
-    if(!user) {
+    if (!user) {
         throw new Error('user not found!');
     }
 
@@ -173,14 +173,14 @@ async function loginUser(usernameOrEmail, password) {
         $or: [{ username: usernameOrEmail }, { email: usernameOrEmail }],
     });
 
-    if(!user) {
+    if (!user) {
         throw new Error('user not found!');
     }
 
     // with the user, we need to compare the hash of the password with the users hashed password
     // RESEARCH: https://stackoverflow.com/questions/40076638/compare-passwords-bcryptjs
     const isMatch = await bcrypt.compare(password, user.passwordHash);
-    if(!isMatch) {
+    if (!isMatch) {
         // password is incorrect
         throw new Error('invalid password!');
     }
@@ -203,8 +203,8 @@ async function auth(userId) {
     const db = await connectDB();
     const usersCollection = db.collection('users');
 
-    const user = await usersCollection.findOne({ id: userId }, { projection: { _id: 0, passwordHash: 0, following: 0 }});
-    if(!user) {
+    const user = await usersCollection.findOne({ id: userId }, { projection: { _id: 0, passwordHash: 0, following: 0 } });
+    if (!user) {
         throw new Error('user not found');
     }
 
@@ -262,9 +262,6 @@ async function getUserProfile(username) {
             artists: spotifyCurrentlyPlaying.tracks[0].track.artists.map(artist => artist.name)
         }
         : null;
-
-
-
 
     return {
         message: "retrieved user successfully",
@@ -351,12 +348,12 @@ async function resetPassword(oldPassword, newPassword, userId) {
 
     const user = await usersCollection.findOne({ id: userId });
 
-    if(!user) {
+    if (!user) {
         throw new Error('user not found!');
     }
 
     const isMatch = await bcrypt.compare(oldPassword, user.passwordHash);
-    if(!isMatch) {
+    if (!isMatch) {
         throw new Error('invalid password!');
     }
 
@@ -382,7 +379,7 @@ async function updateProfileImageUrl(userId, imageUrl) {
     const usersCollection = db.collection('users');
 
     const user = await usersCollection.findOne({ id: userId });
-    if(!user) {
+    if (!user) {
         throw new Error('user not found!');
     }
 
@@ -439,19 +436,19 @@ async function linkSpotify(spotifyAccount) {
     const db = await connectDB();
     const usersCollection = db.collection('users');
     const spotifyCollection = db.collection('spotifyAccounts');
-  
+
     const user = await usersCollection.findOne({ id: spotifyAccount.userId });
     if (!user) {
-      throw new Error('user not found!');
+        throw new Error('user not found!');
     }
 
     const existingSpotify = await spotifyCollection.findOne({ userId: user.id });
-    if(existingSpotify) {
+    if (existingSpotify) {
         throw new Error('account already linked');
     }
-  
+
     const insertResult = await spotifyCollection.insertOne(spotifyAccount);
-    if(!insertResult.acknowledged) {
+    if (!insertResult.acknowledged) {
         throw new Error('error inserting spotifyAccount into database');
     }
 
@@ -472,7 +469,7 @@ async function editUser(newUsername, newEmail, userId) {
     const usersCollection = db.collection('users');
 
     const user = await usersCollection.findOne({ id: userId });
-    if(!user) {
+    if (!user) {
         throw new Error('user not found!');
     }
 
@@ -548,18 +545,20 @@ async function deleteUser(userId) {
     return user;
 }
 
-module.exports = { getFollowers,
-                   getFollowing,
-                   createUser,
-                   auth,
-                   loginUser,
-                   deleteUser,
-                   editUser,
-                   followUser,
-                   resetPassword,
-                   updateProfileImageUrl,
-                   getUserProfile,
-                   getUserProfileById,
-                   getUserFeed,
-                   promote,
-                   linkSpotify };
+module.exports = {
+    getFollowers,
+    getFollowing,
+    createUser,
+    auth,
+    loginUser,
+    deleteUser,
+    editUser,
+    followUser,
+    resetPassword,
+    updateProfileImageUrl,
+    getUserProfile,
+    getUserProfileById,
+    getUserFeed,
+    promote,
+    linkSpotify
+};

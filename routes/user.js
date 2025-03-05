@@ -142,6 +142,7 @@ router.post('/update-info', authenticateAuthHeader, async (req, res) => {
 router.get('/profile/:username', async (req, res) => {
     try {
       const username = req.params.username;
+
       const { message, user, posts, listeningHistory, favouriteArtists } = await getUserProfile(username);
       res.status(200).json({ message, user, posts, listeningHistory, favouriteArtists });
     } catch (error) {
