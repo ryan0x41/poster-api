@@ -199,6 +199,18 @@ async function loginUser(usernameOrEmail, password) {
     return { token, user: { id: user.id, username: user.username, email: user.email, passwordHash: user.passwordHash } };
 }
 
+async function auth(userId) {
+    const db = await connectDB();
+    const usersCollection = db.collection('users');
+
+    const user = await usersCollection.findOne({ id: userId }, { projection: { _id: 0, passwordHash: 0, following: 0 }});
+    if(!user) {
+        throw new Error('user not found');
+    }
+
+    return { message: "user authenticated successfully", user };
+}
+
 // get a user profile (full information) by username
 async function getUserProfile(username) {
     const db = await connectDB();
@@ -212,6 +224,7 @@ async function getUserProfile(username) {
 
     const posts = await postsCollection
         .find({ author: user.id }, { projection: { _id: 0 } })
+        .sort({ postDate: -1 })
         .toArray();
 
     const followers = await usersCollection
@@ -526,6 +539,7 @@ async function deleteUser(userId) {
 module.exports = { getFollowers,
                    getFollowing,
                    createUser,
+                   auth,
                    loginUser,
                    deleteUser,
                    editUser,

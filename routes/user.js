@@ -14,6 +14,7 @@ const { createNotification } = require('../services/notificationService');
 const { getFollowers,
         getFollowing,
         createUser,
+        auth,
         loginUser,
         deleteUser,
         editUser,
@@ -59,6 +60,16 @@ router.post('/promote', authenticateAuthHeader, async (req, res) => {
         const { message } = await promote(userId);
         res.status(200).json({ message: 'user promoted successfully' });
     } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.get('/auth', authenticateAuthHeader, async (req, res) => {
+    try {
+        const { message, user } = await auth(req.user.id);
+        res.status(200).json({ message, user });
+    } catch(error) {
         console.error(error);
         res.status(500).json({ error: error.message });
     }
