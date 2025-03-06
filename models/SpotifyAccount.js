@@ -1,6 +1,6 @@
 class SpotifyAccount {
     constructor({ userId, accessToken, refreshToken, expiresAt, spotifyId }) {
-        if(!userId || !accessToken || !refreshToken || !expiresAt) {
+        if (!userId || !accessToken || !refreshToken || !expiresAt) {
             throw new Error('all fields (userId, accessToken, refreshToken, expiresAt) are required to make a SpotifyAccount');
         }
 

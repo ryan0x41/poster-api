@@ -12,15 +12,15 @@ const spotifyApi = new SpotifyWebApi({
 
 const getSpotifyAuthUrl = (req, res) => {
 	const scopes = [
-					'user-top-read',
-				    'user-read-recently-played',
-				    'user-read-currently-playing',
-					'user-read-playback-state',
-				   ];	// permissions for spotify, change if needed
+		'user-top-read',
+		'user-read-recently-played',
+		'user-read-currently-playing',
+		'user-read-playback-state',
+	];	// permissions for spotify, change if needed
 
 	// csrf stuff i read up on
 	const state = crypto.randomBytes(16).toString('hex');
-  	req.session.spotifyState = state;
+	req.session.spotifyState = state;
 
 	const authorizeURL = spotifyApi.createAuthorizeURL(scopes, state);
 
@@ -34,7 +34,7 @@ const spotifyCallback = async (req, res) => {
 	if (returnedState !== req.session.spotifyState) {
 		return res.status(403).json({ error: 'state mismatch' });
 	}
-	
+
 	delete req.session.spotifyState;
 
 	try {
@@ -45,14 +45,14 @@ const spotifyCallback = async (req, res) => {
 		spotifyApi.setAccessToken(accessToken);
 
 		const spotifyProfile = await spotifyApi.getMe();
-    	const spotifyId = spotifyProfile.body.id;
+		const spotifyId = spotifyProfile.body.id;
 
-		const spotifyAccount = new SpotifyAccount({ 
-			userId: req.user.id, 
-			accessToken, 
-			refreshToken, 
-			expiresAt, 
-			spotifyId 
+		const spotifyAccount = new SpotifyAccount({
+			userId: req.user.id,
+			accessToken,
+			refreshToken,
+			expiresAt,
+			spotifyId
 		});
 
 		await linkSpotify(spotifyAccount);
@@ -71,7 +71,7 @@ async function getSpotifyTopArtists(userId) {
 
 		const topArtistsData = await spotifyApi.getMyTopArtists({ limit: 10 });
 		return { artists: topArtistsData.body.items };
-	} catch(error) {
+	} catch (error) {
 		console.error(error.message);
 		return { artists: [] };
 	}
@@ -141,7 +141,7 @@ async function getCurrentlyPlaying(userId) {
 	try {
 		const { accessToken } = await getSpotifyAccessToken(userId);
 		spotifyApi.setAccessToken(accessToken);
-		
+
 		const currentlyPlaying = await spotifyApi.getMyCurrentPlaybackState();
 		if (!currentlyPlaying.body || !currentlyPlaying.body.item) {
 			return { message: "no track currently playing", tracks: [] };
@@ -159,10 +159,10 @@ async function getCurrentlyPlaying(userId) {
 async function getSpotifyTopData(userId) {
 	const { accessToken } = await getSpotifyAccessToken(userId);
 	spotifyApi.setAccessToken(accessToken);
-	
+
 	const topArtistsData = await spotifyApi.getMyTopArtists({ limit: 10 });
 	const topTracksData = await getSpotifyTopTracks(userId);
-	
+
 	return {
 		artists: topArtistsData.body.items,
 		tracks: topTracksData,

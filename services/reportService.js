@@ -33,7 +33,7 @@ async function getReports(page = 1, pageSize = 50) {
 
     // page should be at least 1
     page = Math.max(1, page);
-    
+
     // number of docs to skip in collection
     const skip = (page - 1) * pageSize;
 
@@ -200,7 +200,7 @@ async function deleteAssociatedContent(reportId) {
         default:
             return { message: "report type in mongo invalid, how did you manage that?" }
     }
-    
+
     await dismissReport(reportId);
 
     return { message: "associated content deleted successfully" };

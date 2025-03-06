@@ -83,7 +83,7 @@ router.post('/like', authenticateAuthHeader, async (req, res) => {
         res.status(200).json({ message: message, commentId: commentId });
     } catch (error) {
         res.status(500).json({ error: error.message });
-    }   
+    }
 });
 
 module.exports = router; 

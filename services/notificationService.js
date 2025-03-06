@@ -2,7 +2,7 @@ const { connectDB } = require('./db');
 const { Notification } = require('../models/Notification');
 
 async function createNotification(notification) {
-    if(!notification instanceof Notification) {
+    if (!notification instanceof Notification) {
         throw new Error('notification has to be an instance of Notification');
     }
 
@@ -10,12 +10,12 @@ async function createNotification(notification) {
     const notificationCollection = db.collection('notifications');
 
     const existingNotification = await notificationCollection.findOne({ notificationId: notification.notificationId });
-    if(existingNotification) {
+    if (existingNotification) {
         throw new Error('notification already exists');
     }
 
     const result = await notificationCollection.insertOne(notification);
-    if(!result.acknowledged) {
+    if (!result.acknowledged) {
         console.log('error inserting notification to notificationCollection');
     }
 
@@ -26,13 +26,13 @@ async function getNotification(recipientId, notificationId) {
     const db = await connectDB();
     const notificationCollection = db.collection('notifications');
 
-    const notification = await notificationCollection.findOne({ notificationId }, { projection: { _id: 0 }});
+    const notification = await notificationCollection.findOne({ notificationId }, { projection: { _id: 0 } });
 
-    if(!notification) {
+    if (!notification) {
         throw new Error('notification not found');
     }
 
-    if(recipientId !== notification.recipientId) {
+    if (recipientId !== notification.recipientId) {
         throw new Error('you can only read notifications for you');
     }
 
@@ -73,16 +73,16 @@ async function deleteNotification(recipientId, notificationId) {
     const notificationCollection = db.collection('notifications');
 
     const notification = await notificationCollection.findOne({ notificationId });
-    if(!notification) {
+    if (!notification) {
         throw new Error('notification not found');
     }
 
-    if(recipientId !== notification.recipientId) {
+    if (recipientId !== notification.recipientId) {
         throw new Error('you can only delete a notification you recieved');
     }
 
     const result = await notificationCollection.deleteOne({ notificationId });
-    if(!result.deletedCount > 0) {
+    if (!result.deletedCount > 0) {
         throw new Error('error deleting notification');
     }
 

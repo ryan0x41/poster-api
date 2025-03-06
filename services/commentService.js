@@ -25,18 +25,18 @@ async function deleteComment(userId, commentId) {
 
     const commentToDelete = await commentCollection.findOne({ commentId });
 
-    if(!commentToDelete) {
+    if (!commentToDelete) {
         throw new Error('comment not found');
     }
 
     // check for admin user id
     // why? because i forgot admins are a thing and now im creating a report system which needs to use this service
-    if(commentToDelete.author !== userId && !SPECIAL_USER_IDS.has(userId)) {
+    if (commentToDelete.author !== userId && !SPECIAL_USER_IDS.has(userId)) {
         throw new Error('you can only delete a comment you created!');
     }
 
     const result = await commentCollection.deleteOne({ commentId });
-    if(!result.deletedCount > 0) {
+    if (!result.deletedCount > 0) {
         throw new Error('error deleting comment');
     }
 
@@ -47,7 +47,7 @@ async function getComment(commentId) {
     const db = await connectDB();
     const commentCollection = db.collection('comments');
 
-    const comment = await commentCollection.findOne({ commentId }, { projection: { _id: 0, commentId: 0 }});
+    const comment = await commentCollection.findOne({ commentId }, { projection: { _id: 0, commentId: 0 } });
 
     return { comment };
 }
@@ -56,7 +56,7 @@ async function getCommentsOnPost(postId) {
     const db = await connectDB();
     const commentCollection = db.collection('comments');
 
-    const comments = await commentCollection.find({ postId }, { projection: { _id: 0 }}).toArray();
+    const comments = await commentCollection.find({ postId }, { projection: { _id: 0 } }).toArray();
     return { comments };
 }
 
@@ -66,7 +66,7 @@ async function toggleLikeOnComment(authorId, commentId) {
 
     // find comment to like
     const comment = await commentCollection.findOne({ commentId });
-    
+
     if (!comment) {
         throw new Error("comment not found");
     }
@@ -77,12 +77,12 @@ async function toggleLikeOnComment(authorId, commentId) {
     // we remove 1 like if the user has liked already (unlike)
     // we add one like when user has not already liked before
     const updateOperation = hasLiked
-        ? { 
-            $inc: { likes: -1 }, 
+        ? {
+            $inc: { likes: -1 },
             $pull: { likedBy: authorId } // remove user from likedBy 
         }
-        : { 
-            $inc: { likes: 1 }, 
+        : {
+            $inc: { likes: 1 },
             $push: { likedBy: authorId } // add user to likedBy 
         };
 
@@ -101,9 +101,9 @@ async function toggleLikeOnComment(authorId, commentId) {
     const updatedComment = await commentCollection.findOne({ commentId });
 
     // some more turnary operators because they look great
-    return { 
-        message: hasLiked ? "like removed" : "like added", 
-        comment: updatedComment 
+    return {
+        message: hasLiked ? "like removed" : "like added",
+        comment: updatedComment
     };
 }
 

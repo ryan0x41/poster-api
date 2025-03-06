@@ -12,19 +12,19 @@ const { createNotification } = require('../services/notificationService');
 
 // the CRUD operations needed from userService
 const { getFollowers,
-        getFollowing,
-        createUser,
-        auth,
-        loginUser,
-        deleteUser,
-        editUser,
-        followUser,
-        resetPassword,
-        updateProfileImageUrl,
-        getUserProfile,
-        getUserProfileById,
-        getUserFeed,
-        promote } = require('../services/userService');
+    getFollowing,
+    createUser,
+    auth,
+    loginUser,
+    deleteUser,
+    editUser,
+    followUser,
+    resetPassword,
+    updateProfileImageUrl,
+    getUserProfile,
+    getUserProfileById,
+    getUserFeed,
+    promote } = require('../services/userService');
 
 // security reasons, dont allow users to delete other user accounts and what not
 const authenticateAuthHeader = require('../middleware/authenticateAuthHeader');
@@ -41,7 +41,7 @@ router.post('/register', async (req, res) => {
     // try to create a new user
     try {
         // status 201 is creation successful
-        const newUser = await createUser(username, email, password );
+        const newUser = await createUser(username, email, password);
         res.status(201).json({ message: 'user created successfully', user: newUser });
     } catch (error) {
         console.error(error);
@@ -51,7 +51,7 @@ router.post('/register', async (req, res) => {
 
 router.post('/promote', authenticateAuthHeader, async (req, res) => {
     try {
-        if(!req.user.isAdmin) {
+        if (!req.user.isAdmin) {
             res.status(401).json({ message: "you have to be admin to promote a user to admin!" });
         }
 
@@ -77,7 +77,7 @@ router.get('/auth', authenticateAuthHeader, async (req, res) => {
         });
 
         res.status(200).json({ message, user });
-    } catch(error) {
+    } catch (error) {
         console.error(error);
         res.status(500).json({ error: error.message });
     }
@@ -106,7 +106,7 @@ router.post('/login', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(400).json({ error: error.message });
-    }    
+    }
 });
 
 router.post('/logout', (req, res) => {
@@ -115,10 +115,10 @@ router.post('/logout', (req, res) => {
     res.status(200).json({ message: 'logged out successfully' });
 });
 
-router.post('/reset-password', authenticateAuthHeader, async (req, res) => {
+router.post('/reset-password', async (req, res) => {
     try {
-        const { oldPassword, newPassword } = req.body;
-        const { message } = await resetPassword(oldPassword, newPassword, req.user.id);
+        const { oldPassword, newPassword, email } = req.body;
+        const { message } = await resetPassword(oldPassword, newPassword, email);
 
         res.status(202).json({ message: message });
     } catch (error) {
@@ -141,38 +141,38 @@ router.post('/update-info', authenticateAuthHeader, async (req, res) => {
 
 router.get('/profile/:username', async (req, res) => {
     try {
-      const username = req.params.username;
+        const username = req.params.username;
 
-      const { message, user, posts, listeningHistory, favouriteArtists } = await getUserProfile(username);
-      res.status(200).json({ message, user, posts, listeningHistory, favouriteArtists });
+        const { message, user, posts, listeningHistory, favouriteArtists } = await getUserProfile(username);
+        res.status(200).json({ message, user, posts, listeningHistory, favouriteArtists });
     } catch (error) {
-      console.error(error);
-      res.status(401).json({ error: error.message });
+        console.error(error);
+        res.status(401).json({ error: error.message });
     }
-  });
-  
-  router.get('/profile/id/:userId', async (req, res) => {
+});
+
+router.get('/profile/id/:userId', async (req, res) => {
     try {
-      const userId = req.params.userId;
-      const { message, user, posts, listeningHistory, favouriteArtists } = await getUserProfileById(userId);
-      res.status(200).json({ message, user, posts, listeningHistory, favouriteArtists });
+        const userId = req.params.userId;
+        const { message, user, posts, listeningHistory, favouriteArtists } = await getUserProfileById(userId);
+        res.status(200).json({ message, user, posts, listeningHistory, favouriteArtists });
     } catch (error) {
-      console.error(error);
-      res.status(401).json({ error: error.message });
+        console.error(error);
+        res.status(401).json({ error: error.message });
     }
-  });
-  
+});
+
 
 router.post('/profile-image', authenticateAuthHeader, upload.single("image"), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ error: "no file uploaded" });
-          }
+        }
 
-          const imageUrl = await uploadImage(req.file.buffer, 'profile-image', req.user.id);
-          const { userId } = await updateProfileImageUrl(req.user.id, imageUrl);
+        const imageUrl = await uploadImage(req.file.buffer, 'profile-image', req.user.id);
+        const { userId } = await updateProfileImageUrl(req.user.id, imageUrl);
 
-          res.json({ message: "user profile image updated successfully", userId: userId, imageUrl: imageUrl });
+        res.json({ message: "user profile image updated successfully", userId: userId, imageUrl: imageUrl });
     } catch (error) {
         console.error("error uploading profile image:", error);
         res.status(500).json({ error: error.message });
@@ -184,7 +184,7 @@ router.post('/follow', authenticateAuthHeader, async (req, res) => {
         const { userIdToFollow } = req.body;
         const { message } = await followUser(req.user.id, userIdToFollow);
 
-        if(!message.includes('unfollowed')) {
+        if (!message.includes('unfollowed')) {
             // create a follow notifcation for the user that was followed
             const followNotification = new Notification({
                 recipientId: userIdToFollow,

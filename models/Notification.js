@@ -12,7 +12,7 @@ class Notification {
             throw new Error('all fields (recipientId, notificationMessage, notificationType) are required');
         }
 
-        if(!Object.values(NotificationType).includes(notificationType)) {
+        if (!Object.values(NotificationType).includes(notificationType)) {
             throw new Error(`invalid type: ${type}. must be one of ${Object.values(NotificationType).join(", ")}`);
         }
 
@@ -22,7 +22,7 @@ class Notification {
         this.notificationMessage = notificationMessage;
         this.contentRedirect = contentRedirect;
         this.read = false;
-        
+
     }
 }
 

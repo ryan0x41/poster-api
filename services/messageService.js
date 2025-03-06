@@ -3,7 +3,7 @@ const { Message } = require('../models/Message');
 const { request } = require('express');
 
 async function sendMessage(message) {
-    if(!message instanceof Message) {
+    if (!message instanceof Message) {
         throw new Error('message has to be an instance of Message');
     }
 
@@ -22,7 +22,7 @@ async function getMessageThread(conversationId, requestedBy) {
 
     const conversation = await conversationCollection.findOne({ conversationId })
 
-    if(!conversation.participants.includes(requestedBy)) {
+    if (!conversation.participants.includes(requestedBy)) {
         throw new Error('you can only view the conversations you participate in!');
     }
 

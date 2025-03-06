@@ -31,7 +31,7 @@ router.get('/:conversationId', authenticateAuthHeader, async (req, res) => {
         const conversationId = req.params.conversationId;
         const { message, conversation } = await getConversation(conversationId);
 
-        res.status(200).json({ message, conversation});
+        res.status(200).json({ message, conversation });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error.message });

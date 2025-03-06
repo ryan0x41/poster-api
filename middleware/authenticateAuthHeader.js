@@ -2,11 +2,11 @@ const jwt = require('jsonwebtoken');
 
 function authenticateAuthHeader(req, res, next) {
     let token = req.headers.authorization;
-	if (token && token.startsWith("Bearer ")) {
-		token = token.slice(7).trim();
-	}
+    if (token && token.startsWith("Bearer ")) {
+        token = token.slice(7).trim();
+    }
     // i should do oneliners more often
-    if (!token) { 
+    if (!token) {
         const error = new Error('no authentication header provided')
         error.status = 401;
         return next(error);

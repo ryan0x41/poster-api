@@ -5,11 +5,11 @@ const SPECIAL_USER_IDS = new Set(["cafebabe", "feedface"]);
 
 async function createPost(post) {
     const db = await connectDB();
-    const postCollection = db.collection('post'); 
+    const postCollection = db.collection('post');
 
     const existingPost = await postCollection.findOne({ title: post.title, author: post.author });
 
-    if(existingPost) {
+    if (existingPost) {
         throw new Error('post already exists');
     }
 
@@ -40,7 +40,7 @@ async function toggleLikeOnPost(authorId, postId) {
 
     // find post to like
     const post = await postCollection.findOne({ postId });
-    
+
     if (!post) {
         throw new Error("post not found");
     }
@@ -51,12 +51,12 @@ async function toggleLikeOnPost(authorId, postId) {
     // we remove 1 like if the user has liked already (unlike)
     // we add one like when user has not already liked before
     const updateOperation = hasLiked
-        ? { 
-            $inc: { likes: -1 }, 
+        ? {
+            $inc: { likes: -1 },
             $pull: { likedBy: authorId } // remove user from likedBy 
         }
-        : { 
-            $inc: { likes: 1 }, 
+        : {
+            $inc: { likes: 1 },
             $push: { likedBy: authorId } // add user to likedBy 
         };
 
@@ -75,9 +75,9 @@ async function toggleLikeOnPost(authorId, postId) {
     const updatedPost = await postCollection.findOne({ postId });
 
     // some more turnary operators because they look great
-    return { 
-        message: hasLiked ? "like removed" : "like added", 
-        post: updatedPost 
+    return {
+        message: hasLiked ? "like removed" : "like added",
+        post: updatedPost
     };
 }
 
@@ -87,7 +87,7 @@ async function toggleLikeOnComment(authorId, commentId) {
 
     // find comment to like
     const comment = await commentCollection.findOne({ commentId });
-    
+
     if (!comment) {
         throw new Error("comment not found");
     }
@@ -98,12 +98,12 @@ async function toggleLikeOnComment(authorId, commentId) {
     // we remove 1 like if the user has liked already (unlike)
     // we add one like when user has not already liked before
     const updateOperation = hasLiked
-        ? { 
-            $inc: { likes: -1 }, 
+        ? {
+            $inc: { likes: -1 },
             $pull: { likedBy: authorId } // remove user from likedBy 
         }
-        : { 
-            $inc: { likes: 1 }, 
+        : {
+            $inc: { likes: 1 },
             $push: { likedBy: authorId } // add user to likedBy 
         };
 
@@ -122,9 +122,9 @@ async function toggleLikeOnComment(authorId, commentId) {
     const updatedComment = await commentCollection.findOne({ commentId });
 
     // some more turnary operators because they look great
-    return { 
-        message: hasLiked ? "like removed" : "like added", 
-        comment: updatedComment 
+    return {
+        message: hasLiked ? "like removed" : "like added",
+        comment: updatedComment
     };
 }
 
@@ -191,16 +191,16 @@ async function deletePost(userId, postId) {
 
     const postToDelete = await postCollection.findOne({ postId });
 
-    if(!postToDelete) {
+    if (!postToDelete) {
         throw new Error('post not found');
     }
 
-    if(postToDelete.author !== userId && !SPECIAL_USER_IDS.has(userId)) {
+    if (postToDelete.author !== userId && !SPECIAL_USER_IDS.has(userId)) {
         throw new Error('you can only delete a post you created!');
     }
 
     const result = await postCollection.deleteOne({ postId });
-    if(!result.deletedCount > 0) {
+    if (!result.deletedCount > 0) {
         throw new Error('error deleting post');
     }
 
@@ -209,7 +209,7 @@ async function deletePost(userId, postId) {
 
 async function getAuthorPosts(authorId) {
     const db = await connectDB();
-    const postCollection = db.collection('post'); 
+    const postCollection = db.collection('post');
 
     const posts = await postCollection.find({ author: authorId }, { projection: { _id: 0 } }).toArray();
 

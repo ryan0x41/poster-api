@@ -57,7 +57,7 @@ router.post('/like', authenticateAuthHeader, async (req, res) => {
 router.get('/:postId', async (req, res) => {
     try {
         const { postId } = req.params;
-        
+
         const { message, post } = await getPostWithComments(postId);
         res.status(302).json({ message: message, post: post });
     } catch (error) {
@@ -69,7 +69,7 @@ router.get('/:postId', async (req, res) => {
 router.post('/search', async (req, res) => {
     try {
         const { searchQuery } = req.body;
-        
+
         const { message, posts } = await searchPosts(searchQuery);
         res.status(302).json({ message, posts });
     } catch (error) {

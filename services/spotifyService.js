@@ -5,7 +5,7 @@ const SpotifyWebApi = require('spotify-web-api-node');
 async function getSpotifyAccessToken(userId) {
     const db = await connectDB();
     const spotifyCollection = db.collection('spotifyAccounts');
-    
+
     const spotifyAccount = await spotifyCollection.findOne({ userId });
     if (!spotifyAccount) {
         throw new Error("spotify account not linked");
@@ -32,9 +32,9 @@ async function getSpotifyAccessToken(userId) {
             { $set: { accessToken: newAccessToken, expiresAt: newExpiresAt } }
         );
         spotifyAccount.accessToken = newAccessToken;
-      }
+    }
 
-      return { accessToken: spotifyAccount.accessToken };
+    return { accessToken: spotifyAccount.accessToken };
 }
 
 module.exports = { getSpotifyAccessToken };

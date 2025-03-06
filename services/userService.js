@@ -342,11 +342,11 @@ async function getUserProfileById(userId) {
 }
 
 // reset a password using oldPassword and userId
-async function resetPassword(oldPassword, newPassword, userId) {
+async function resetPassword(oldPassword, newPassword, email) {
     const db = await connectDB();
     const usersCollection = db.collection('users');
 
-    const user = await usersCollection.findOne({ id: userId });
+    const user = await usersCollection.findOne({ email: email });
 
     if (!user) {
         throw new Error('user not found!');
@@ -366,7 +366,7 @@ async function resetPassword(oldPassword, newPassword, userId) {
     const newPasswordHash = await bcrypt.hash(newPassword, 10);
 
     await usersCollection.updateOne(
-        { id: userId },
+        { email: email },
         { $set: { passwordHash: newPasswordHash } }
     );
 

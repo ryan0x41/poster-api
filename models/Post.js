@@ -3,7 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 class Post {
     constructor({ title, content, author, images = [] }) {
 
-        if(!title || !content || !author) {
+        if (!title || !content || !author) {
             throw new Error('all fields (title, content and author) are required to make a post');
         }
 

@@ -4,7 +4,7 @@ const { Conversation } = require('../models/Conversation');
 async function startConversation(conversation) {
     if (!(conversation instanceof Conversation)) {
         throw new Error('conversation has to be an instance of Conversation');
-    }    
+    }
 
     const db = await connectDB();
     const conversationCollection = db.collection('conversations');
@@ -23,11 +23,11 @@ async function getConversation(userId, conversationId) {
 
     const conversation = await conversationCollection.findOne({ conversationId });
 
-    if(!conversation) {
+    if (!conversation) {
         throw new Error('conversation does not exist');
     }
 
-    if(!conversation.participants.includes(userId)) {
+    if (!conversation.participants.includes(userId)) {
         throw new Error('you can only read conversations you participate in');
     }
 

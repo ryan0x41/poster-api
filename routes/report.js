@@ -17,7 +17,7 @@ router.post('/create', authenticateAuthHeader, async (req, res) => {
         if (!Object.values(ContentType).includes(type)) {
             return res.status(400).json({ error: `invalid type: ${type}. must be one of ${Object.values(ContentType).join(", ")}` });
         }
-        
+
         const reportedBy = req.user.id;
 
         // create new report
@@ -35,7 +35,7 @@ router.post('/create', authenticateAuthHeader, async (req, res) => {
 
 router.post('/process', authenticateAuthHeader, async (req, res) => {
     try {
-        if(!req.user.isAdmin) {
+        if (!req.user.isAdmin) {
             return res.status(401).json({ message: "only admins can process reports!" });
         }
 
@@ -51,7 +51,7 @@ router.post('/process', authenticateAuthHeader, async (req, res) => {
 
 router.get('/all/:pageNumber?', authenticateAuthHeader, async (req, res) => {
     try {
-        if(!req.user.isAdmin) {
+        if (!req.user.isAdmin) {
             return res.status(401).json({ message: "only admins can view reports!" });
         }
 
