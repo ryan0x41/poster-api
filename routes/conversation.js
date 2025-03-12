@@ -26,7 +26,7 @@ router.post('/create', authenticateAuthHeader, async (req, res) => {
     }
 });
 
-router.get('/:conversationId', authenticateAuthHeader, async (req, res) => {
+router.get('/id/:conversationId', authenticateAuthHeader, async (req, res) => {
     try {
         const conversationId = req.params.conversationId;
         const { message, conversation } = await getConversation(conversationId);
@@ -40,6 +40,7 @@ router.get('/:conversationId', authenticateAuthHeader, async (req, res) => {
 
 router.get('/all', authenticateAuthHeader, async (req, res) => {
     try {
+        console.log('here');
         const { conversations, message } = await getConversations(req.user.id);
         res.status(200).json({ message, conversations });
     } catch (error) {
