@@ -70,13 +70,14 @@ router.get('/auth', authenticateAuthHeader, async (req, res) => {
         const { message, user } = await auth(req.user.id);
 
         res.cookie('user', Buffer.from(JSON.stringify(user)).toString('base64'), {
-            // secure: true, // TODO: change on deploy
-            secure: false,
-            sameSite: 'Strict',
+            httpOnly: true,
+            secure: true,           
+            sameSite: 'None',
+            domain: '.poster-social.com',
             maxAge: 24 * 60 * 60 * 1000
         });
 
-        res.status(200).json({ message, user });
+        res.status(200).json({ message, user, userCookie: Buffer.from(JSON.stringify(user)).toString('base64') });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error.message });

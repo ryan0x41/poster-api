@@ -55,9 +55,47 @@ async function getComment(commentId) {
 async function getCommentsOnPost(postId) {
     const db = await connectDB();
     const commentCollection = db.collection('comments');
+    const userCollection = db.collection('users');
 
-    const comments = await commentCollection.find({ postId }, { projection: { _id: 0 } }).toArray();
-    return { comments };
+    const comments = await commentCollection
+        .find({ postId }, { projection: { _id: 0 } })
+        .toArray();
+
+    const uniqueAuthorIds = [...new Set(comments.map(comment => comment.author))];
+
+    const users = await userCollection.find(
+        { id: { $in: uniqueAuthorIds } },
+        { projection: { _id: 0, id: 1, username: 1, profileImageUrl: 1 } }
+    ).toArray();    
+
+    const userMap = {};
+    users.forEach(user => {
+        userMap[user.id] = user;
+    });
+
+    console.log(users)
+    console.log(userMap)
+
+    const updatedComments = comments.map(comment => {
+        const user = userMap[comment.author];
+        if (user) {
+            const updated = {
+                ...comment,
+                author: user.username
+            };
+            if (user.profileImageUrl) {
+                updated.profileImageUrl = user.profileImageUrl;
+            }
+            return updated;
+        }
+
+        return {
+            ...comment,
+            author: ''
+        };
+    });
+
+    return { comments: updatedComments };
 }
 
 async function toggleLikeOnComment(authorId, commentId) {

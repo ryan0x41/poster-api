@@ -38,6 +38,7 @@ const messageRouter = require('./routes/message')
 const reportRouter = require('./routes/report')
 const notificationRouter = require('./routes/notification')
 const spotifyRouter = require('./routes/spotify')
+const analyticsRouter = require('./routes/analytics')
 
 const startTime = Date.now();
 
@@ -56,6 +57,7 @@ app.use('/message', messageRouter);
 app.use('/report', reportRouter);
 app.use('/notification', notificationRouter);
 app.use('/spotify', spotifyRouter);
+app.use('/analytics', analyticsRouter);
 
 const routes = [
   { path: "/user", description: "user related operations" },

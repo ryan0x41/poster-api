@@ -115,7 +115,6 @@ async function getUserFeed(userId, page) {
     }
 
     const followingList = user.following || [];
-
     const postsPerPage = 10;
     const pageNumber = parseInt(page, 10) || 1;
     const skipCount = (pageNumber - 1) * postsPerPage;
@@ -127,21 +126,51 @@ async function getUserFeed(userId, page) {
         .limit(postsPerPage)
         .toArray();
 
+    await Promise.all(
+        feedPosts.map(async post => {
+            const profileData = await getUserProfileById(post.author);
+            post.userProfile = profileData.user;
+        })
+    );
 
-    return { message: "user feed retrieved successfully", posts: feedPosts, page: pageNumber };
+    return {
+        message: "user feed retrieved successfully",
+        posts: feedPosts,
+        page: pageNumber
+    };
 }
+
 
 // grab user followers
 async function getFollowers(userId) {
     const db = await connectDB();
     const usersCollection = db.collection('users');
 
-    // all users where userId is in their following array
     const followers = await usersCollection
-        .find({ following: userId }, { projection: { _id: 0, email: 0, passwordHash: 0, following: 0, warnings: 0, isAdmin: 0 } })
+        .find(
+            { following: userId },
+            { projection: { _id: 0, id: 1, username: 1, profileImageUrl: 1 } }
+        )
         .toArray();
 
     return { message: "user followers retrieved successfully", followers };
+}
+
+// grab new users
+async function getNewUsers() {
+    const db = await connectDB();
+    const usersCollection = db.collection('users');
+
+    const newUsers = await usersCollection
+        .find(
+            {},
+            { projection: { _id: 0, username: 1, profileImageUrl: 1 } }
+        )
+        .sort({ accountCreation: -1 })
+        .limit(10)
+        .toArray();
+
+    return { message: "new users retrieved successfully", users: newUsers };
 }
 
 // grab user following
@@ -156,12 +185,16 @@ async function getFollowing(userId) {
 
     const followingList = user.following || [];
 
-    const followingUsers = await usersCollection
-        .find({ id: { $in: followingList } }, { projection: { _id: 0, id: 1, username: 1, accountCreation: 1 } })
+    let followingUsers = await usersCollection
+        .find(
+            { id: { $in: followingList } },
+            { projection: { _id: 0, id: 1, username: 1, accountCreation: 1, profileImageUrl: 1 } }
+        )
         .toArray();
 
     return { message: "user following retrieved successfully", following: followingUsers };
 }
+
 
 // grab an authToken using usernameOrEmail and password
 async function loginUser(usernameOrEmail, password) {
@@ -231,11 +264,14 @@ async function getUserProfile(username) {
         .find({ following: user.id }, { projection: { _id: 0, email: 0, passwordHash: 0, following: 0, warnings: 0, isAdmin: 0 } })
         .toArray();
 
-    const following = user.following && user.following.length > 0 ?
-        await usersCollection
-            .find({ id: { $in: user.following } }, { projection: { _id: 0, id: 1, username: 1, accountCreation: 1 } })
-            .toArray() :
-        [];
+    const following = user.following && user.following.length > 0
+        ? await usersCollection
+            .find(
+                { id: { $in: user.following } },
+                { projection: { _id: 0, id: 1, username: 1, accountCreation: 1, profileImageUrl: 1 } }
+            )
+            .toArray()
+        : [];
 
     const spotifyTracksResponse = await getSpotifyTopTracks(user.id);
     const tracks = Array.isArray(spotifyTracksResponse.tracks) ? spotifyTracksResponse.tracks : [];
@@ -297,14 +333,21 @@ async function getUserProfileById(userId) {
         .toArray();
 
     const followers = await usersCollection
-        .find({ following: userId }, { projection: { _id: 0, email: 0, passwordHash: 0, following: 0, warnings: 0, isAdmin: 0 } })
+        .find(
+            { following: userId },
+            { projection: { _id: 0, email: 0, passwordHash: 0, following: 0, warnings: 0, isAdmin: 0 } }
+        )
         .toArray();
 
-    const following = user.following && user.following.length > 0 ?
-        await usersCollection
-            .find({ id: { $in: user.following } }, { projection: { _id: 0, id: 1, username: 1, accountCreation: 1 } })
-            .toArray() :
-        [];
+    const following =
+        user.following && user.following.length > 0
+            ? await usersCollection
+                .find(
+                    { id: { $in: user.following } },
+                    { projection: { _id: 0, id: 1, username: 1, accountCreation: 1, profileImageUrl: 1 } }
+                )
+                .toArray()
+            : [];
 
     const spotifyTracksResponse = await getSpotifyTopTracks(user.id);
     const tracks = Array.isArray(spotifyTracksResponse.tracks) ? spotifyTracksResponse.tracks : [];
@@ -324,6 +367,15 @@ async function getUserProfileById(userId) {
         name: artist.name
     }));
 
+    const spotifyCurrentlyPlaying = await getCurrentlyPlaying(user.id);
+    const currentlyPlaying =
+        spotifyCurrentlyPlaying.tracks && spotifyCurrentlyPlaying.tracks.length > 0
+            ? {
+                name: spotifyCurrentlyPlaying.tracks[0].track.name,
+                artists: spotifyCurrentlyPlaying.tracks[0].track.artists.map(artist => artist.name)
+            }
+            : null;
+
     return {
         message: "retrieved user successfully",
         user: {
@@ -336,7 +388,8 @@ async function getUserProfileById(userId) {
             following,
             posts,
             listeningHistory,
-            favouriteArtists
+            favouriteArtists,
+            currentlyPlaying
         }
     };
 }
@@ -560,5 +613,6 @@ module.exports = {
     getUserProfileById,
     getUserFeed,
     promote,
-    linkSpotify
+    linkSpotify,
+    getNewUsers
 };
