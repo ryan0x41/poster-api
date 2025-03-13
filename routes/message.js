@@ -1,5 +1,5 @@
 const express = require('express');
-const authenticateAuthHeader = require('../middleware/authenticateAuthHeader');
+const { decodeToken, authenticateAuthHeader } = require('../middleware/authenticateAuthHeader');
 const router = express.Router();
 const { sendMessage, getMessageThread } = require('../services/messageService');
 const { Message } = require('../models/Message');
@@ -8,7 +8,9 @@ const { getConversation } = require('../services/conversationService');
 const { createNotification } = require('../services/notificationService');
 const { Notification, NotificationType } = require('../models/Notification');
 
-router.post('/send', authenticateAuthHeader, async (req, res) => {
+const { getIO, userSockets } = require('../socket');
+
+router.post('/send', decodeToken, authenticateAuthHeader, async (req, res) => {
     try {
         const { conversationId, content } = req.body;
         const sender = req.user.id;
@@ -21,6 +23,8 @@ router.post('/send', authenticateAuthHeader, async (req, res) => {
         // the sender should not recieve an notification for a message they sent
         const recipients = conversation.participants.filter(participant => participant !== sender);
 
+        const io = getIO();
+
         // for each recipient, create a notification for each of them
         for (const recipientId of recipients) {
             const messageNotification = new Notification({
@@ -29,6 +33,17 @@ router.post('/send', authenticateAuthHeader, async (req, res) => {
                 notificationType: NotificationType.MESSAGE,
             });
             await createNotification(messageNotification);
+
+            // emit message to user if user is connected
+            const recipientSocketId = userSockets[recipientId];
+            if (recipientSocketId) {
+                io.to(recipientSocketId).emit('new_message', {
+                    conversationId,
+                    sender,
+                    content,
+                    timestamp: new Date().toISOString(),
+                });
+            }
         }
 
         res.status(200).json({ message });
@@ -38,7 +53,7 @@ router.post('/send', authenticateAuthHeader, async (req, res) => {
     }
 });
 
-router.get('/thread/:conversationId', authenticateAuthHeader, async (req, res) => {
+router.get('/thread/:conversationId', decodeToken, authenticateAuthHeader, async (req, res) => {
     try {
         const conversationId = req.params.conversationId;
         const messages = await getMessageThread(conversationId, req.user.id);

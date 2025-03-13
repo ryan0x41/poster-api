@@ -27,7 +27,7 @@ const { getFollowers,
     promote } = require('../services/userService');
 
 // security reasons, dont allow users to delete other user accounts and what not
-const authenticateAuthHeader = require('../middleware/authenticateAuthHeader');
+const { decodeToken, authenticateAuthHeader } = require('../middleware/authenticateAuthHeader');
 
 router.post('/register', async (req, res) => {
     const { username, email, password } = req.body;
@@ -49,7 +49,7 @@ router.post('/register', async (req, res) => {
     }
 });
 
-router.post('/promote', authenticateAuthHeader, async (req, res) => {
+router.post('/promote', decodeToken, authenticateAuthHeader, async (req, res) => {
     try {
         if (!req.user.isAdmin) {
             res.status(401).json({ message: "you have to be admin to promote a user to admin!" });
@@ -65,7 +65,7 @@ router.post('/promote', authenticateAuthHeader, async (req, res) => {
     }
 });
 
-router.get('/auth', authenticateAuthHeader, async (req, res) => {
+router.get('/auth', decodeToken, authenticateAuthHeader, async (req, res) => {
     try {
         const { message, user } = await auth(req.user.id);
 
@@ -128,7 +128,7 @@ router.post('/reset-password', async (req, res) => {
     }
 });
 
-router.post('/update-info', authenticateAuthHeader, async (req, res) => {
+router.post('/update-info', decodeToken, authenticateAuthHeader, async (req, res) => {
     try {
         const { newEmail, newUsername } = req.body;
         const { message, token } = await editUser(newUsername, newEmail, req.user.id);
@@ -180,7 +180,7 @@ router.post('/profile-image', authenticateAuthHeader, upload.single("image"), as
     }
 });
 
-router.post('/follow', authenticateAuthHeader, async (req, res) => {
+router.post('/follow', decodeToken, authenticateAuthHeader, async (req, res) => {
     try {
         const { userIdToFollow } = req.body;
         const { message } = await followUser(req.user.id, userIdToFollow);
@@ -202,7 +202,7 @@ router.post('/follow', authenticateAuthHeader, async (req, res) => {
     }
 });
 
-router.get('/feed/:page', authenticateAuthHeader, async (req, res) => {
+router.get('/feed/:page', decodeToken, authenticateAuthHeader, async (req, res) => {
     try {
         const { message, posts, page } = await getUserFeed(req.user.id, req.params.page);
 
@@ -237,7 +237,7 @@ router.get('/followers/:userId', async (req, res) => {
     }
 });
 
-router.post('/delete-account', authenticateAuthHeader, async (req, res) => {
+router.post('/delete-account', decodeToken, authenticateAuthHeader, async (req, res) => {
     const { userId, usernameOrEmail, password } = req.body;
 
     // validate against auth user

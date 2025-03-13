@@ -3,7 +3,8 @@ const router = express.Router();
 const multer = require('multer');
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
-const authenticateAuthHeader = require('../middleware/authenticateAuthHeader')
+
+const { authenticateAuthHeader } = require('../middleware/authenticateAuthHeader')
 
 const { uploadImage } = require('../services/uploadService');
 

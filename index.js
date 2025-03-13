@@ -8,30 +8,20 @@ const socketIo = require('socket.io');
 const express = require('express');
 const session = require('express-session');
 const http = require('http');
-
 const processInfo = require('process');
 const os = require('os');
+
+const { verifyToken } = require('./middleware/authenticateAuthHeader');
+const { initSocket } = require('./socket');
 
 const app = express();
 const server = http.createServer(app);
 
-const io = socketIo(server, {
-  cors: {
-    origin: process.env.WEB_URL || 'http://localhost:4000',
-    methods: ['GET', 'POST']
-  }
-});
+// init socket.io module
+initSocket(server);
 
-io.on('connection', (socket) => {
-    console.log('new connection');
-
-    socket.on('disconnect', () => {
-      console.log('socket disconnected');
-    })
-});
-
-server.listen(6000, () => {
-  console.log('server listening on port 6000');
+server.listen(1028, () => {
+  console.log('server listening on port 1028');
 });
 
 app.use(cors({
@@ -59,7 +49,7 @@ const messageRouter = require('./routes/message')
 const reportRouter = require('./routes/report')
 const notificationRouter = require('./routes/notification')
 const spotifyRouter = require('./routes/spotify')
-const analyticsRouter = require('./routes/analytics')
+const analyticsRouter = require('./routes/analytics');
 
 const startTime = Date.now();
 

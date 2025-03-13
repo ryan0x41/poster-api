@@ -2,9 +2,9 @@ const express = require('express');
 const router = express.Router();
 
 const { getNewUsers } = require('../services/userService');
-const authenticateAuthHeader = require('../middleware/authenticateAuthHeader');
+const { decodeToken, authenticateAuthHeader } = require('../middleware/authenticateAuthHeader');
 
-router.get('/new/users', authenticateAuthHeader, async (req, res) => {
+router.get('/new/users', decodeToken, authenticateAuthHeader, async (req, res) => {
     try {
         const { users } = await getNewUsers();
         res.status(200).json({ message: "new users retrieved successfuly", users });

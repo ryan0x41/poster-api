@@ -8,7 +8,7 @@ const {
     getSpotifyTopTracks,
     getCurrentlyPlaying,
 } = require('../controllers/spotifyController');
-const authenticateAuthHeader = require('../middleware/authenticateAuthHeader');
+const { decodeToken, authenticateAuthHeader } = require('../middleware/authenticateAuthHeader');
 
 router.get('/auth', authenticateAuthHeader, getSpotifyAuthUrl);
 router.get('/callback', authenticateAuthHeader, spotifyCallback);

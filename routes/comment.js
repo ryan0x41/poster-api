@@ -4,13 +4,13 @@ const Comment = require('../models/Comment');
 
 const { toggleLikeOnComment, deleteComment, addCommentToPost, getComment, getCommentsOnPost } = require('../services/commentService');
 
-const authenticateAuthHeader = require('../middleware/authenticateAuthHeader');
+const { decodeToken, authenticateAuthHeader } = require('../middleware/authenticateAuthHeader');
 
 const { createNotification } = require('../services/notificationService');
 const { Notification, NotificationType } = require('../models/Notification');
 const { getPost } = require('../services/postService');
 
-router.post('/create', authenticateAuthHeader, async (req, res) => {
+router.post('/create', decodeToken, authenticateAuthHeader, async (req, res) => {
     try {
         const { content, postId } = req.body;
 
@@ -51,7 +51,7 @@ router.get('/:commentId', async (req, res) => {
     }
 });
 
-router.delete('/delete/:commentId', authenticateAuthHeader, async (req, res) => {
+router.delete('/delete/:commentId', decodeToken, authenticateAuthHeader, async (req, res) => {
     try {
         const { message } = await deleteComment(req.user.id, req.params.commentId);
         res.status(200).json({ message });
@@ -73,7 +73,7 @@ router.get('/post/:postId', async (req, res) => {
     }
 });
 
-router.post('/like', authenticateAuthHeader, async (req, res) => {
+router.post('/like', decodeToken, authenticateAuthHeader, async (req, res) => {
     try {
         const { commentId } = req.body;
         const authorId = req.user.id;
