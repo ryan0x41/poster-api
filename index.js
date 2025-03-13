@@ -4,14 +4,35 @@ const engine = require('ejs-mate');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
-
+const socketIo = require('socket.io');
 const express = require('express');
 const session = require('express-session');
+const http = require('http');
 
 const processInfo = require('process');
 const os = require('os');
 
 const app = express();
+const server = http.createServer(app);
+
+const io = socketIo(server, {
+  cors: {
+    origin: process.env.WEB_URL || 'http://localhost:4000',
+    methods: ['GET', 'POST']
+  }
+});
+
+io.on('connection', (socket) => {
+    console.log('new connection');
+
+    socket.on('disconnect', () => {
+      console.log('socket disconnected');
+    })
+});
+
+server.listen(6000, () => {
+  console.log('server listening on port 6000');
+});
 
 app.use(cors({
   origin: process.env.WEB_URL || 'http://localhost:4000',
