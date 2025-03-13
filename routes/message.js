@@ -56,6 +56,7 @@ router.post('/send', decodeToken, authenticateAuthHeader, async (req, res) => {
 router.patch('/typing/:conversationId', decodeToken, authenticateAuthHeader, async (req, res) => {
     try {
         const conversationId = req.params.conversationId;
+        const sender = req.user.id;
         const { conversation } = await getConversation(req.user.id, conversationId);
 
         const recipients = conversation.participants.filter(participant => participant !== sender);

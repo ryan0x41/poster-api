@@ -25,9 +25,9 @@ server.listen(3000, () => {
 });
 
 app.use(cors({
-  origin: process.env.WEB_URL || 'http://localhost:4000',
+  origin: process.env.FRONTEND_URL || 'http://localhost:4000',
   credentials: true, 
-  methods: 'GET,POST,PUT,DELETE,OPTIONS',
+  methods: 'GET,POST,PUT,DELETE,OPTIONS,PATCH',
   allowedHeaders: 'Content-Type,Authorization'
 }));
 
