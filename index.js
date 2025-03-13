@@ -20,8 +20,8 @@ const server = http.createServer(app);
 // init socket.io module
 initSocket(server);
 
-server.listen(1028, () => {
-  console.log('server listening on port 1028');
+server.listen(3000, () => {
+  console.log('server listening on port 3000');
 });
 
 app.use(cors({
@@ -31,7 +31,7 @@ app.use(cors({
   allowedHeaders: 'Content-Type,Authorization'
 }));
 
-const port = 3000
+const port = 6000
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'nci',

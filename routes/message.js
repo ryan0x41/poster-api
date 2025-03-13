@@ -41,7 +41,7 @@ router.post('/send', decodeToken, authenticateAuthHeader, async (req, res) => {
                     conversationId,
                     sender,
                     content,
-                    timestamp: new Date().toISOString(),
+                    sendAt: new Date().toISOString(),
                 });
             }
         }
