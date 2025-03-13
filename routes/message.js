@@ -53,6 +53,32 @@ router.post('/send', decodeToken, authenticateAuthHeader, async (req, res) => {
     }
 });
 
+router.patch('/typing/:conversationId', decodeToken, authenticateAuthHeader, async (req, res) => {
+    try {
+        const conversationId = req.params.conversationId;
+        const { conversation } = await getConversation(req.user.id, conversationId);
+
+        const recipients = conversation.participants.filter(participant => participant !== sender);
+        const io = getIO();
+
+        for (const recipientId of recipients) {
+            // emit message to user if user is connected
+            const recipientSocketId = userSockets[recipientId];
+            if (recipientSocketId) {
+                io.to(recipientSocketId).emit('typing', {
+                    conversationId,
+                    sender,
+                });
+            }
+        }
+
+        res.status(200).json({ message: "typing receipt sent" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 router.get('/thread/:conversationId', decodeToken, authenticateAuthHeader, async (req, res) => {
     try {
         const conversationId = req.params.conversationId;
