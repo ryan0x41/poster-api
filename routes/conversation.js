@@ -2,7 +2,7 @@ const express = require('express');
 const { decodeToken, authenticateAuthHeader } = require('../middleware/authenticateAuthHeader');
 const router = express.Router();
 const { Conversation } = require('../models/Conversation');
-const { startConversation, getConversations, getConversation } = require('../services/conversationService');
+const { startConversation, getConversations, getConversation, deleteConversation } = require('../services/conversationService');
 
 router.post('/create', decodeToken, authenticateAuthHeader, async (req, res) => {
     try {
@@ -14,17 +14,34 @@ router.post('/create', decodeToken, authenticateAuthHeader, async (req, res) => 
         }
 
         participants.push(sender);
+        const uniqueParticipants = [...new Set(participants)];
+        if (uniqueParticipants.length < 2) {
+            return res.status(400).json({ error: "cannot start conversation with yourself" });
+        }
 
         const conversation = new Conversation({ participants });
-        const { message } = await startConversation(conversation);
+        const { message, conversationId } = await startConversation(conversation);
 
-        res.status(201).json({ message, conversationId: conversation.conversationId });
+        res.status(201).json({ message, conversationId });
 
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error.message });
     }
 });
+
+router.delete('/delete/:conversationId', decodeToken, authenticateAuthHeader, async (req, res) => {
+    try {   
+        const conversationId = req.params.conversationId;
+        const userId = req.user.id;
+
+        const { message } = await deleteConversation(userId, conversationId);
+        res.status(200).json({ message });
+    } catch(error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+}); 
 
 router.get('/id/:conversationId', decodeToken, authenticateAuthHeader, async (req, res) => {
     try {
