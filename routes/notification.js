@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { readNotification, deleteNotification, createNotification, getNotifications, getNotification } = require('../services/notificationService');
+const { readNotification, readAllNotification, createNotification, getNotifications, getNotification } = require('../services/notificationService');
 const { Notification } = require('../models/Notification');
 
 const { decodeToken, authenticateAuthHeader } = require('../middleware/authenticateAuthHeader');
@@ -35,7 +35,7 @@ router.get('/all/:pageNumber?', decodeToken, authenticateAuthHeader, async (req,
     }
 });
 
-router.patch('/read/:notificationId', decodeToken, authenticateAuthHeader, async (req, res) => {
+router.patch('/read/id/:notificationId', decodeToken, authenticateAuthHeader, async (req, res) => {
     try {
         const notificationId = req.params.notificationId;
         const { message } = await readNotification(req.user.id, notificationId);
@@ -47,11 +47,9 @@ router.patch('/read/:notificationId', decodeToken, authenticateAuthHeader, async
     }
 });
 
-router.patch('/delete/:notificationId', decodeToken, authenticateAuthHeader, async (req, res) => {
+router.patch('/read/all', decodeToken, authenticateAuthHeader, async (req, res) => {
     try {
-        const notificationId = req.params.notificationId;
-        const { message } = await deleteNotification(req.user.id, notificationId);
-
+        const { message } = readAllNotification(req.user.id);
         res.status(200).json({ message });
     } catch (error) {
         console.error(error);

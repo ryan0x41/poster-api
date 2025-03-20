@@ -22,15 +22,16 @@ router.post('/create', decodeToken, authenticateAuthHeader, async (req, res) => 
 
         const { commentId } = await addCommentToPost(postId, newComment);
 
-        const { post } = await getPost(postId);
-        if (post.author !== req.user.id) {
-            const commentNotification = new Notification({
-                recipientId: post.author,
-                notificationMessage: `${req.user.username} commented on your post.`,
-                notificationType: NotificationType.COMMENT,
-            });
-            await createNotification(commentNotification);
-        }
+//        const { post } = await getPost(postId);
+
+//        if (post.author !== req.user.id) {
+//            const commentNotification = new Notification({
+//                recipientId: post.author,
+//                notificationMessage: `${req.user.username} commented on your post.`,
+//                notificationType: NotificationType.COMMENT,
+//            });
+//            await createNotification(commentNotification);
+//        }
 
         res.status(201).json({ message: "comment created successfully", commentId: commentId });
     } catch (error) {

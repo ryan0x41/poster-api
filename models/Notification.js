@@ -1,13 +1,14 @@
 const { v4: uuidv4 } = require('uuid');
 
+// no follow or comment notifications for now
 const NotificationType = Object.freeze({
     FOLLOW: "follow",
-    MESSAGE: "notification_message",
-    COMMENT: "comment"
+    MESSAGE: "message",
+    // COMMENT: "comment"
 });
 
 class Notification {
-    constructor({ recipientId, notificationMessage, notificationType, contentRedirect = 0 }) {
+    constructor({ recipientId, notificationMessage, notificationType, sender }) {
         if (!recipientId || !notificationMessage || !notificationType) {
             throw new Error('all fields (recipientId, notificationMessage, notificationType) are required');
         }
@@ -20,9 +21,8 @@ class Notification {
         this.notificationId = uuidv4();
         this.recipientId = recipientId;
         this.notificationMessage = notificationMessage;
-        this.contentRedirect = contentRedirect;
-        this.read = false;
-
+        this.sender = sender;
+        this.notificationType = notificationType;
     }
 }
 

@@ -68,7 +68,7 @@ async function getNotifications(recipientId, page = 1, pageSize = 50) {
     };
 }
 
-async function deleteNotification(recipientId, notificationId) {
+async function readNotification(recipientId, notificationId) {
     const db = await connectDB();
     const notificationCollection = db.collection('notifications');
 
@@ -87,33 +87,19 @@ async function deleteNotification(recipientId, notificationId) {
     }
 
     return { message: "deleted notification successfully" };
-};
+}
 
-async function readNotification(recipientId, notificationId) {
+async function readAllNotification(recipientId) {
     const db = await connectDB();
     const notificationCollection = db.collection('notifications');
 
-    const notification = await notificationCollection.findOne({ notificationId });
-
-    if (!notification) {
-        throw new Error('notification not found');
+    const result = await notificationCollection.deleteMany({ recipientId });
+    if (!result.deletedCount > 0) { 
+        throw new Error('error reading/deleting notifications');
     }
 
-    if (recipientId !== notification.recipientId) {
-        throw new Error('you can only read a notification you received');
-    }
-
-    const updateResult = await notificationCollection.updateOne(
-        { notificationId },
-        { $set: { read: true } }
-    );
-
-    if (updateResult.modifiedCount === 0) {
-        throw new Error('failed to update notification status');
-    }
-
-    return { message: "read receipt sent successfully" };
+    return { message: "all notifications read successfully" };
 }
 
 
-module.exports = { readNotification, deleteNotification, createNotification, getNotifications, getNotification };
+module.exports = { readNotification, readAllNotification, createNotification, getNotifications, getNotification };

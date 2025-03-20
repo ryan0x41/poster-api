@@ -10,6 +10,8 @@ const { uploadImage } = require('../services/uploadService');
 const { Notification, NotificationType } = require('../models/Notification');
 const { createNotification } = require('../services/notificationService');
 
+const { getIO, userSockets } = require('../socket');
+
 // the CRUD operations needed from userService
 const { getFollowers,
     getFollowing,
@@ -185,14 +187,26 @@ router.post('/follow', decodeToken, authenticateAuthHeader, async (req, res) => 
         const { userIdToFollow } = req.body;
         const { message } = await followUser(req.user.id, userIdToFollow);
 
+        const io = getIO();
+
         if (!message.includes('unfollowed')) {
             // create a follow notifcation for the user that was followed
             const followNotification = new Notification({
                 recipientId: userIdToFollow,
                 notificationMessage: `${req.user.username} has followed you.`,
                 notificationType: NotificationType.FOLLOW,
+                sender: req.user.id
             });
             await createNotification(followNotification);
+
+            const recipientSocketId = userSockets[userIdToFollow];
+
+            if(recipientSocketId) {
+                // real time follow notif retrieval
+                io.to(recipientSocketId).emit('new_notification', {
+                    notificationData: followNotification,
+                });
+            }
         }
 
         res.status(200).json({ message });

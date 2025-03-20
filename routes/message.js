@@ -31,17 +31,24 @@ router.post('/send', decodeToken, authenticateAuthHeader, async (req, res) => {
                 recipientId,
                 notificationMessage: `${req.user.username} sent you a message.`,
                 notificationType: NotificationType.MESSAGE,
+                sender,
             });
             await createNotification(messageNotification);
 
             // emit message to user if user is connected
             const recipientSocketId = userSockets[recipientId];
             if (recipientSocketId) {
+                // real time message retrieval
                 io.to(recipientSocketId).emit('new_message', {
                     conversationId,
                     sender,
                     content,
                     sendAt: new Date().toISOString(),
+                });
+
+                // real time notification for message
+                io.to(recipientSocketId).emit('new_notification', {
+                    notificationData: messageNotification,
                 });
             }
         }
