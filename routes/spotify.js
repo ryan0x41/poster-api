@@ -8,12 +8,43 @@ const {
     getSpotifyTopTracks,
     getCurrentlyPlaying,
 } = require('../controllers/spotifyController');
-const { decodeToken, authenticateAuthHeader } = require('../middleware/authenticateAuthHeader');
+const { decodeToken, authenticateAuthHeader, verifyToken } = require('../middleware/authenticateAuthHeader');
 
-router.get('/auth', authenticateAuthHeader, getSpotifyAuthUrl);
-router.get('/callback', authenticateAuthHeader, spotifyCallback);
+const stateStore = {};
 
-router.get('/top/:option?/:userId?', authenticateAuthHeader, async (req, res, next) => {
+router.get('/auth', decodeToken, authenticateAuthHeader, async (req, res, next) => {
+    try {
+        const state = Math.random().toString(36).substr(2, 10);
+        stateStore[state] = req.token;
+        const authorizeURL = getSpotifyAuthUrl(state);
+        const url = new URL(authorizeURL);
+        url.searchParams.set("state", state);
+        res.status(200).json({ authorizeURL: url.toString() });
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.get('/callback', async (req, res, next) => {
+    const state = req.query.state;
+    if (!state || !stateStore[state]) {
+        const error = new Error("invalid or missing state parameter");
+        error.status = 401;
+        return next(error);
+    }
+    const token = stateStore[state];
+    delete stateStore[state];
+    try {
+        req.user = await verifyToken(token);
+        req.token = token;
+        next();
+    } catch (error) {
+        error.status = 401;
+        return next(error);
+    }
+}, spotifyCallback);
+
+router.get('/top/:option?/:userId?', decodeToken, authenticateAuthHeader, async (req, res, next) => {
     try {
         let { option, userId } = req.params;
         userId = userId || req.query.userId || req.user.id;
@@ -46,7 +77,7 @@ router.get('/top/:option?/:userId?', authenticateAuthHeader, async (req, res, ne
     }
 });
 
-router.get('/playing/:userId?', authenticateAuthHeader, async (req, res, next) => {
+router.get('/playing/:userId?', decodeToken, authenticateAuthHeader, async (req, res, next) => {
     try {
         let { userId } = req.params;
         userId = userId || req.user.id;

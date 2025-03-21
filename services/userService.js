@@ -3,8 +3,6 @@ const { connectDB } = require('./db')
 const bcrypt = require('bcrypt');
 // for creating a session when logged in
 const jwt = require('jsonwebtoken');
-// for full profile retrieval
-const { getSpotifyTopArtists, getSpotifyTopTracks, getCurrentlyPlaying } = require('../controllers/spotifyController');
 
 // dont crash on me now!
 if (!process.env.JWT_SECRET) {
@@ -246,6 +244,9 @@ async function auth(userId) {
 
 // get a user profile (full information) by username
 async function getUserProfile(username) {
+    // for full profile retrieval
+    const { getSpotifyTopArtists, getSpotifyTopTracks, getCurrentlyPlaying } = require('../controllers/spotifyController');
+
     const db = await connectDB();
     const usersCollection = db.collection('users');
     const postsCollection = db.collection('post');
@@ -319,6 +320,9 @@ async function getUserProfile(username) {
 
 // get user profile given a userId
 async function getUserProfileById(userId) {
+    // for full profile retrieval
+    const { getSpotifyTopArtists, getSpotifyTopTracks, getCurrentlyPlaying } = require('../controllers/spotifyController');
+    
     const db = await connectDB();
     const usersCollection = db.collection('users');
     const postsCollection = db.collection('post');
@@ -497,7 +501,7 @@ async function linkSpotify(spotifyAccount) {
 
     const existingSpotify = await spotifyCollection.findOne({ userId: user.id });
     if (existingSpotify) {
-        throw new Error('account already linked');
+        return { message: 'account already linked'};
     }
 
     const insertResult = await spotifyCollection.insertOne(spotifyAccount);
@@ -513,7 +517,19 @@ async function linkSpotify(spotifyAccount) {
         throw new Error('failed to update user');
     }
 
-    return insertResult;
+    return { message: "success" };
+}
+
+async function unlinkSpotify(userId) {
+    const db = await connectDB();
+    const spotifyCollection = db.collection('spotifyAccounts');
+
+    const result = spotifyCollection.deleteOne({ userId });
+    if (result.deletedCount === 0) { 
+        throw new Error('error unlinking account');
+    }
+
+    return { message: "account unlinked successfully" };    
 }
 
 // edit a users email or username by userId
@@ -614,5 +630,6 @@ module.exports = {
     getUserFeed,
     promote,
     linkSpotify,
+    unlinkSpotify,
     getNewUsers
 };

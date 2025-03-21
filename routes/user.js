@@ -26,6 +26,7 @@ const { getFollowers,
     getUserProfile,
     getUserProfileById,
     getUserFeed,
+    unlinkSpotify,
     promote } = require('../services/userService');
 
 // security reasons, dont allow users to delete other user accounts and what not
@@ -81,6 +82,16 @@ router.get('/auth', decodeToken, authenticateAuthHeader, async (req, res) => {
 
         res.status(200).json({ message, user, userCookie: Buffer.from(JSON.stringify(user)).toString('base64') });
     } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.get('/spotify/unlink', decodeToken, authenticateAuthHeader, async (req, res) => {
+    try {
+        const { message } = await unlinkSpotify(req.user.id);
+        res.status(200).json({ message });
+    } catch(error) {
         console.error(error);
         res.status(500).json({ error: error.message });
     }

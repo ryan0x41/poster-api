@@ -1,3 +1,5 @@
+const dotenv = require('dotenv');
+dotenv.config({ path: '.config' });
 const SpotifyWebApi = require('spotify-web-api-node');
 const { linkSpotify } = require('../services/userService');
 const { getSpotifyAccessToken } = require('../services/spotifyService');
@@ -10,32 +12,24 @@ const spotifyApi = new SpotifyWebApi({
 	redirectUri: process.env.SPOTIFY_REDIRECT_URI || "http://localhost:3000/spotify/callback",
 });
 
-const getSpotifyAuthUrl = (req, res) => {
+const getSpotifyAuthUrl = (state) => {
 	const scopes = [
 		'user-top-read',
 		'user-read-recently-played',
 		'user-read-currently-playing',
 		'user-read-playback-state',
-	];	// permissions for spotify, change if needed
-
-	// csrf stuff i read up on
-	const state = crypto.randomBytes(16).toString('hex');
-	req.session.spotifyState = state;
-
-	const authorizeURL = spotifyApi.createAuthorizeURL(scopes, state);
-
-	//res.redirect(authorizeURL);
-	res.status(200).json({ message: "success", authorizeURL });
+	];
+	return spotifyApi.createAuthorizeURL(scopes, state);
 };
 
 const spotifyCallback = async (req, res) => {
-	const { code, state: returnedState } = req.query;
+	const { code } = req.query;
 
-	if (returnedState !== req.session.spotifyState) {
-		return res.status(403).json({ error: 'state mismatch' });
+	if (req.session) {
+		delete req.session.spotifyState;
+	} else {
+		delete req.spotifyState;
 	}
-
-	delete req.session.spotifyState;
 
 	try {
 		const data = await spotifyApi.authorizationCodeGrant(code);
@@ -56,11 +50,11 @@ const spotifyCallback = async (req, res) => {
 		});
 
 		await linkSpotify(spotifyAccount);
-
-		res.json({ message: 'spotify connected successfully' });
+		
+		res.redirect((process.env.FRONTEND_URL || 'http://localhost:4000') + '/spotify/success');
 	} catch (error) {
 		console.error(error.message);
-		res.status(500).json({ error: "failed to auth with spotify" });
+		res.redirect((process.env.FRONTEND_URL || 'http://localhost:4000') + '/spotify/failure');
 	}
 };
 
