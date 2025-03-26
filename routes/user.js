@@ -177,7 +177,7 @@ router.get('/profile/id/:userId', async (req, res) => {
 });
 
 
-router.post('/profile-image', authenticateAuthHeader, upload.single("image"), async (req, res) => {
+router.post('/profile-image', decodeToken, authenticateAuthHeader, upload.single("image"), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ error: "no file uploaded" });
