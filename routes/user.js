@@ -72,13 +72,13 @@ router.get('/auth', decodeToken, authenticateAuthHeader, async (req, res) => {
     try {
         const { message, user } = await auth(req.user.id);
 
-        res.cookie('user', Buffer.from(JSON.stringify(user)).toString('base64'), {
-            httpOnly: true,
-            secure: true,           
-            sameSite: 'None',
-            domain: '.poster-social.com',
-            maxAge: 24 * 60 * 60 * 1000
-        });
+//        res.cookie('user', Buffer.from(JSON.stringify(user)).toString('base64'), {
+//            httpOnly: true,
+//            secure: true,           
+//            sameSite: 'None',
+//            domain: '.poster-social.com',
+//            maxAge: 24 * 60 * 60 * 1000
+//        });
 
         res.status(200).json({ message, user, userCookie: Buffer.from(JSON.stringify(user)).toString('base64') });
     } catch (error) {
@@ -109,12 +109,12 @@ router.post('/login', async (req, res) => {
         // status 201 is creation successful
         const { token } = await loginUser(usernameOrEmail, password);
 
-        res.cookie('authToken', token, {
-            // secure: true, // TODO: change on deploy
-            httpOnly: true,
-            secure: false,
-            sameSite: 'Strict'
-        });
+//        res.cookie('authToken', token, {
+//            // secure: true, // TODO: change on deploy
+//            httpOnly: true,
+//            secure: false,
+//            sameSite: 'Strict'
+//        });
 
         res.status(201).json({ message: 'user logged in successfully', token: token });
     } catch (error) {
