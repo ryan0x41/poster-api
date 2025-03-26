@@ -31,8 +31,6 @@ app.use(cors({
   allowedHeaders: 'Content-Type,Authorization'
 }));
 
-const port = 6000
-
 app.use(session({
   secret: process.env.SESSION_SECRET || 'nci',
   resave: false,
@@ -114,7 +112,3 @@ app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
 });
-
-app.listen(port, () => {
-  console.log(`forked listening on port ${port}`)
-})
