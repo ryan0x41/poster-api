@@ -5,12 +5,26 @@ let io = null;
 const userSockets = {};
 
 function initSocket(server) {
+  const allowedOrigins = [
+    'https://poster-social.com',
+    'https://www.poster-social.com',
+    'http://localhost:4000'
+  ];
+
   io = socketIo(server, {
     cors: {
-      origin: process.env.FRONTEND_URL || 'http://localhost:4000',
-      methods: ['GET', 'POST']
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error('not allowed by cors'));
+        }
+      },
+      methods: ['GET', 'POST'],
+      credentials: true
     }
   });
+
 
   io.use(async (socket, next) => {
     const token = socket.handshake.auth.token;

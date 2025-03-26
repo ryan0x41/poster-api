@@ -24,9 +24,21 @@ server.listen(3000, () => {
   console.log('server listening on port 3000');
 });
 
+const allowedOrigins = [
+  'https://poster-social.com',
+  'https://www.poster-social.com',
+  'http://localhost:4000',
+];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:4000',
-  credentials: true, 
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('not allowed by cors'));
+    }
+  },
+  credentials: true,
   methods: 'GET,POST,PUT,DELETE,OPTIONS,PATCH',
   allowedHeaders: 'Content-Type,Authorization'
 }));
@@ -109,6 +121,6 @@ app.get('/', (req, res) => {
 });
 
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
+  console.error(err.stack);
+  res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
 });
