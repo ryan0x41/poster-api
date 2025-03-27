@@ -19,8 +19,9 @@ async function startConversation(conversation) {
     }
 
     const conversationCollection = db.collection('conversations');
+    const participants = [...conversation.participants].sort();
 
-    const existingConversation = await conversationCollection.findOne({ participants: conversation.participants });
+    const existingConversation = await conversationCollection.findOne({ participants });
     if(existingConversation) {
         return { message: "existing conversation found", conversationId: existingConversation.conversationId };
     }
