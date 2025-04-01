@@ -308,6 +308,7 @@ async function getUserProfile(username) {
             email: user.email,
             profileImageUrl: user.profileImageUrl,
             accountCreation: user.accountCreation,
+            isAdmin: user.isAdmin,
             followers,
             following,
             posts,
