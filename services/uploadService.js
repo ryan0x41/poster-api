@@ -28,8 +28,18 @@ const uploadImage = (fileBuffer, folder = "images", filename = null) => {
     const publicId = `${folder}/${baseFilename}${fileExtension}`;
 
     const options = folder === "profile-image"
-      ? { folder, public_id: publicId, resource_type: "image", format: fileExtension.replace(".", ""), transformation: [{ width: 200, height: 200, crop: "fill" }] }
-      : { folder, public_id: publicId, resource_type: "image", format: "jpeg", transformation: [{ quality: "auto", fetch_format: "jpeg" }] };
+      ? {
+        folder,
+        public_id: publicId,
+        resource_type: "image",
+        transformation: [{ width: 200, height: 200, crop: "fill" }]
+      }
+      : {
+        folder,
+        public_id: publicId,
+        resource_type: "image",
+        transformation: [{ quality: "auto", fetch_format: "auto" }]
+      };
 
     const uploadStream = cloudinary.uploader.upload_stream(
       options,
