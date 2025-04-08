@@ -59,7 +59,7 @@ router.get('/:postId', async (req, res) => {
         const { postId } = req.params;
 
         const { message, post } = await getPostWithComments(postId);
-        res.status(302).json({ message: message, post: post });
+        res.status(200).json({ message: message, post: post });
     } catch (error) {
         console.error("error finding post:", error.message);
         res.status(400).json({ error: error.message });
