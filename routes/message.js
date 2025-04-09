@@ -13,8 +13,12 @@ const { getIO, userSockets } = require('../socket');
 router.post('/send', decodeToken, authenticateAuthHeader, async (req, res) => {
     try {
         const { conversationId, content } = req.body;
+
+        // source: https://stackoverflow.com/questions/18749591/encode-html-entities-in-javascript
+        const encodedContent = content.replace(/[\u00A0-\u9999<>\&]/g, i => '&#'+i.charCodeAt(0)+';')
+
         const sender = req.user.id;
-        const messageToSend = new Message({ sender, conversationId, content });
+        const messageToSend = new Message({ sender, conversationId, content: encodedContent });
 
         const { message } = await sendMessage(messageToSend);
 
@@ -42,7 +46,7 @@ router.post('/send', decodeToken, authenticateAuthHeader, async (req, res) => {
                 io.to(recipientSocketId).emit('new_message', {
                     conversationId,
                     sender,
-                    content,
+                    encodedContent,
                     sendAt: new Date().toISOString(),
                 });
 
