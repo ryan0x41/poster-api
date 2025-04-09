@@ -53,7 +53,7 @@ async function deleteConversation(userId, conversationId) {
 
     result = await messagesCollection.deleteMany({ conversationId });
     if (!result.deletedCount > 0) { 
-        throw new Error('error deleting messages');
+        return { message: "delete conversation success, no messages to delete" };
     }
 
     return { message: "delete conversation/messages success" };
