@@ -19,7 +19,7 @@ const {
 // more security = more computing power
 const SALT_ROUNDS = 10;
 
-// validate user creation input 
+// validate user creation input
 function validateRegistration(username, email, password) {
     // SOURCE: https://stackoverflow.com/questions/201323/how-can-i-validate-an-email-address-using-a-regular-expression
     const emailRegex = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)])/;
@@ -323,7 +323,7 @@ async function getUserProfile(username) {
 async function getUserProfileById(userId) {
     // for full profile retrieval
     const { getSpotifyTopArtists, getSpotifyTopTracks, getCurrentlyPlaying } = require('../controllers/spotifyController');
-    
+
     const db = await connectDB();
     const usersCollection = db.collection('users');
     const postsCollection = db.collection('post');
@@ -526,11 +526,11 @@ async function unlinkSpotify(userId) {
     const spotifyCollection = db.collection('spotifyAccounts');
 
     const result = spotifyCollection.deleteOne({ userId });
-    if (result.deletedCount === 0) { 
+    if (result.deletedCount === 0) {
         throw new Error('error unlinking account');
     }
 
-    return { message: "account unlinked successfully" };    
+    return { message: "account unlinked successfully" };
 }
 
 // edit a users email or username by userId
@@ -632,5 +632,7 @@ module.exports = {
     promote,
     linkSpotify,
     unlinkSpotify,
-    getNewUsers
+    getNewUsers,
+    // testing
+    validateRegistration
 };

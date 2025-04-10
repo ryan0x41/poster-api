@@ -4,7 +4,8 @@
   "description": "the backend for a social platform focusing on music",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest"
   },
   "repository": {
     "type": "git",
@@ -37,5 +38,8 @@
     "socket.io": "^4.8.1",
     "spotify-web-api-node": "^5.0.2",
     "uuid": "^11.0.5"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
   }
 }
