@@ -33,7 +33,7 @@ describe('validateRegistration', () => {
 
   // email validation checks
   test('should reject invalid email formats', () => {
-    const invalidEmails = [
+    const invalidEmails = [ 
       'invalid',
       'invalid@',
       '@example.com',

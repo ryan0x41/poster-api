@@ -46,7 +46,7 @@ router.post('/send', decodeToken, authenticateAuthHeader, async (req, res) => {
                 io.to(recipientSocketId).emit('new_message', {
                     conversationId,
                     sender,
-                    encodedContent,
+                    content: encodedContent,
                     sendAt: new Date().toISOString(),
                 });
 
